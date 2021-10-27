@@ -106,8 +106,14 @@ VOID DrawDivImage(DIVIMAGE* image);				//分割画像の描画
 VOID DrawDivImageChara(DIVIMAGE* image);		//分割画像の描画
 
 VOID DrawHitBox(EVENT* events);					//イベントの当たり判定の描画
+
+VOID ItemEventInit(EVENT* events, int Wood, int Stone, int CntMax);	//アイテム初期化
+
 VOID CreateItem(EVENT* events);					//アイテム作成
 VOID CreateItemDraw(EVENT* events);				//アイテム作成時の必要数表示
+
+VOID GetItemSystem(EVENT* events);				//採取の個数変動
+VOID GetItemDraw(EVENT* events);				//採取時の個数表示
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
 
@@ -433,19 +439,13 @@ VOID PlayInit(VOID)
 	ItemWood = 0;
 	ItemStone = 0;
 
-	CreatePickaxe.Cnt = 0;
-	CreatePickaxe.CntMax = 1;
-	CreateAxe.Cnt = 0;
-	CreateAxe.CntMax = 1;
-	CreateKey.Cnt = 0;
-	CreateKey.CntMax = 1;
+	ItemEventInit(&GetItem,1,1,NULL);
+	ItemEventInit(&GetWood,5,0,NULL);
+	ItemEventInit(&GetStone,0,5,NULL);
 
-	CreatePickaxe.Wood = 1;
-	CreatePickaxe.Stone = 2;
-	CreateAxe.Wood = 1;
-	CreateAxe.Stone = 3;
-	CreateKey.Wood = 10;
-	CreateKey.Stone = 10;
+	ItemEventInit(&CreatePickaxe, 1, 2, 1);
+	ItemEventInit(&CreateAxe, 1, 3, 1);
+	ItemEventInit(&CreateKey, 10, 10, 1);
 	
 	return;
 }
@@ -684,29 +684,9 @@ VOID PlayProc(VOID)
 		CreateItem(&CreateAxe);
 		CreateItem(&CreateKey);
 
-		if (CheckCollRectToRect(samplePlayerImg.coll, GetItem.coll) == TRUE)
-		{
-			if (KeyClick(KEY_INPUT_Z))
-			{
-				ItemWood++;
-				ItemStone++;
-			}
-		}
-		if (CheckCollRectToRect(samplePlayerImg.coll, GetWood.coll) == TRUE && CreateAxe.Cnt > 0)
-		{
-			if (KeyClick(KEY_INPUT_Z))
-			{
-				ItemWood+=5;
-			}
-		}
-		if (CheckCollRectToRect(samplePlayerImg.coll, GetStone.coll) == TRUE && CreatePickaxe.Cnt > 0)
-		{
-			if (KeyClick(KEY_INPUT_Z))
-			{
-				ItemStone+=5;
-			}
-		}
-
+		GetItemSystem(&GetItem);
+		GetItemSystem(&GetWood);
+		GetItemSystem(&GetStone);
 	}
 
 	GameTimeLimit -= fps.DeltaTime;
@@ -755,6 +735,10 @@ VOID PlayDraw(VOID)
 	CreateItemDraw(&CreatePickaxe);
 	CreateItemDraw(&CreateAxe);
 	CreateItemDraw(&CreateKey);
+
+	GetItemDraw(&GetItem);
+	GetItemDraw(&GetWood);
+	GetItemDraw(&GetStone);
 	
 	DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
 	return;
@@ -805,7 +789,7 @@ VOID EndDraw(VOID)
 	DrawImage(EndImg);
 
 	//数値を出したいとき
-	DrawFormatStringToHandle(800, 200, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
+	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
 
 	DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
 	return;
@@ -856,7 +840,7 @@ VOID GameOverDraw(VOID)
 	DrawImage(GameoverImg);
 
 	//数値を出したいとき
-	DrawFormatStringToHandle(800, 200, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
+	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
 
 	DrawString(0, 0, "ゲームオーバー画面", GetColor(0, 0, 0));
 	return;
@@ -1466,3 +1450,44 @@ VOID CreateItemDraw(EVENT* events)
 
 	return;
 }
+
+VOID ItemEventInit(EVENT* events,int Wood,int Stone,int CntMax)
+{
+	events->Wood = Wood;
+	events->Stone = Stone;
+	if (CntMax != NULL)
+	{
+		events->Cnt = 0;
+		events->CntMax = CntMax;
+	}
+	return;
+}
+
+VOID GetItemSystem(EVENT* events)
+{
+	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE)
+	{
+		if (KeyClick(KEY_INPUT_Z))
+		{
+			ItemWood += events->Wood;
+			ItemStone += events->Stone;
+		}
+	}
+
+	return;
+}
+
+VOID GetItemDraw(EVENT* events)
+{
+	//クラフト
+	{
+		if (events->can == TRUE)
+		{
+			DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
+				"採取個数\n木: %d\n石: %d", ItemWood, events->Wood, ItemStone, events->Stone);
+		}
+	}
+
+	return;
+}
+
