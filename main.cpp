@@ -456,12 +456,20 @@ VOID PlayInit(VOID)
 
 VOID EndInit(VOID)
 {
+	//エンド画面の初期化
+	EndImg.IsDraw = TRUE;
+	EndImg.x = 0;
+	EndImg.y = 0;
 
 	return;
 }
 
 VOID GameOverInit(VOID)
 {
+	//ゲームオーバー画面の初期化
+	GameoverImg.IsDraw = TRUE;
+	GameoverImg.x = 0;
+	GameoverImg.y = 0;
 
 	return;
 }
@@ -927,6 +935,9 @@ VOID ChangeDraw(VOID)
 		break;
 	case GAME_SCENE_END:
 		EndDraw();		//エンド画面の描画
+		break;
+	case GAME_SCENE_GAMEOVER:
+		GameOverDraw();
 		break;
 	default:
 		break;
