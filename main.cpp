@@ -45,13 +45,15 @@ int fadeInCntInit = fadeTimeMax;	//初期値
 int fadeInCnt = fadeInCntInit;		//フェードアウトのカウンタ
 int fadeInCntMax = fadeTimeMax;		//フェードアウトのカウンタMAX
 //★★★ゲーム共通のグローバル変数★★★
+
 float GameTimeLimit=0;
-const float GameTimeLimitMax=30;
+const float GameTimeLimitMax=60;
 
 
 //独自のグローバル変数
 
-
+int ItemWood;
+int ItemStone;
 
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
@@ -62,6 +64,7 @@ VOID GameDelete(VOID);	//データを削除
 VOID TitleInit(VOID);
 VOID PlayInit(VOID);
 VOID EndInit(VOID);
+VOID GameOverInit(VOID);
 
 VOID Title(VOID);		//タイトル画面
 VOID TitleProc(VOID);	//タイトル画面(処理)
@@ -74,6 +77,10 @@ VOID PlayDraw(VOID);	//プレイ画面(描画)
 VOID End(VOID);			//エンド画面
 VOID EndProc(VOID);		//エンド画面(処理)
 VOID EndDraw(VOID);		//エンド画面(描画)
+
+VOID GameOver(VOID);		//ゲームオーバー画面
+VOID GameOverProc(VOID);	//ゲームオーバー画面(処理)
+VOID GameOverDraw(VOID);	//ゲームオーバー画面(描画)
 
 VOID Change(VOID);		//切り替え画面
 VOID ChangeProc(VOID);	//切り替え画面(処理)
@@ -98,6 +105,10 @@ VOID DrawRect(RECT r, unsigned int color, bool b);	//RECT描画
 VOID DrawDivImage(DIVIMAGE* image);				//分割画像の描画
 VOID DrawDivImageChara(DIVIMAGE* image);		//分割画像の描画
 
+VOID DrawHitBox(EVENT* events);					//イベントの当たり判定の描画
+VOID CreateItem(EVENT* events);					//アイテム作成
+VOID CreateItemDraw(EVENT* events);				//アイテム作成時の必要数表示
+
 //★★★ゲーム共通のプロトタイプ宣言★★★
 
 //サンプルの素材
@@ -107,12 +118,31 @@ DIVIMAGE samplePlayerImg;
 MUKI muki = muki_shita;		//サンプル向き
 
 AUDIO sampleBGM;
+AUDIO titleBGM;
 AUDIO playBGM;
+AUDIO endBGM;
+AUDIO gameoverBGM;
 
 MAP_DATA map1;
+MAP_DATA map2;
 
 //イベントマス
 EVENT sampleevent;
+
+EVENT CreatePickaxe;
+EVENT CreateAxe;
+EVENT CreateKey;
+
+EVENT GetItem;
+EVENT GetWood;
+EVENT GetStone;
+
+EVENT Goal;
+
+//ロゴなどの画像
+IMAGE TitleImg;
+IMAGE EndImg;
+IMAGE GameoverImg;
 
 
 // プログラムは WinMain から始まります
@@ -200,6 +230,9 @@ int WINAPI WinMain(
 		case GAME_SCENE_END:
 			End();				//エンド画面
 			break;
+		case GAME_SCENE_GAMEOVER:
+			GameOver();			//ゲームオーバー画面
+			break;
 		case GAME_SCENE_CHANGE:
 			Change();			//切り替え画面
 			break;
@@ -281,6 +314,30 @@ BOOL GameLoad(VOID)
 		MAP1_YOKO_DIV,MAP1_TATE_DIV
 	) == FALSE) {return FALSE; }
 
+	//BGMを読み込み
+	if (LoadAudio(&titleBGM, ".\\audio\\街をブラブラする的なBGM.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+	if (LoadAudio(&playBGM, ".\\audio\\Just_a_really_bad_feeling.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+	if (LoadAudio(&endBGM, ".\\audio\\ブルーボトル.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+	if (LoadAudio(&gameoverBGM, ".\\audio\\拭えない悲しみと迫り来る明日.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+
+
+	//マップデータを読み込み
+	if(LoadCSVMap(
+		IMG_PATH_MAP1,
+		CSV_PATH_MAP2_SHITA,
+		CSV_PATH_MAP2_NAKA,
+		CSV_PATH_MAP2_KAGU,
+		CSV_PATH_MAP2_NAKA_ATARI,
+		CSV_PATH_MAP2_UE,
+		&map2,
+		MAP1_YOKO_DIV,MAP1_TATE_DIV
+	) == FALSE) {return FALSE; }
+
+	//ロゴ読み込み
+	if (LoadImageMem(&TitleImg, ".\\Image\\脱出_タイトル.png") == FALSE) { return FALSE; }
+	if (LoadImageMem(&EndImg, ".\\Image\\脱出_ゲームクリア.png") == FALSE) { return FALSE; }
+	if (LoadImageMem(&GameoverImg, ".\\Image\\脱出_ゲームオーバー.png") == FALSE) { return FALSE; }
+
 	return TRUE;	//全て読み込みた！
 }
 
@@ -300,9 +357,18 @@ VOID GameDelete(VOID)
 
 	//サンプル音楽を削除
 	DeleteMusicMem(sampleBGM.handle);
+	DeleteMusicMem(titleBGM.handle);
+	DeleteMusicMem(playBGM.handle);
+	DeleteMusicMem(endBGM.handle);
+	DeleteMusicMem(gameoverBGM.handle);
 
 	//フォントデータを削除
 	FontDelete();
+
+	//画像を削除
+	DeleteGraph(TitleImg.handle);
+	DeleteGraph(EndImg.handle);
+	DeleteGraph(GameoverImg.handle);
 
 	return;
 }
@@ -315,28 +381,82 @@ VOID GameInit(VOID)
 {
 	//音楽の音量調整
 	SetVolumeAudio(&sampleBGM, 100);
+	SetVolumeAudio(&titleBGM, 200);
+	SetVolumeAudio(&playBGM, 200);
+	SetVolumeAudio(&endBGM, 200);
+	SetVolumeAudio(&gameoverBGM, 200);
 
 	//ゲーム内時間リセット
 	ResetGameTime();
+
+	//サンプルプレイヤー初期化
 
 	return;
 }
 
 VOID TitleInit(VOID)
 {
-	//サンプルイベントの作成
-	CreateEventMass(10, 10, &sampleevent, map1);
+	//タイトルロゴの初期化
+	TitleImg.IsDraw = TRUE;
+	TitleImg.x = 0;
+	TitleImg.y = 0;
 	
 	return;
 }
 
 VOID PlayInit(VOID)
 {
+	//サンプルプレイヤー初期化
+	samplePlayerImg.speed = 2;
+	samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
+	samplePlayerImg.y = MAP1_TATE_MAX * map2.height / 2 - samplePlayerImg.height / 2;
+	muki = muki_none;
+
+	//サンプルイベントの作成
+	//CreateEventMultiMass(9, 1, 11, 2, &sampleevent, map2);
+
+	//イベントの作成
+	CreateEventMass(3, 9, &CreatePickaxe, map2);
+	CreateEventMass(16, 9, &CreateAxe, map2);
+	CreateEventMass(16, 4, &CreateKey, map2);
+
+	CreateEventMultiMass(8, 15, 12, 18, &GetItem, map2);
+	CreateEventMultiMass(2, 16, 4, 18, &GetWood, map2);
+	CreateEventMultiMass(16, 16, 19, 18, &GetStone, map2);
+
+	CreateEventMultiMass(9, 1, 11, 2, &Goal, map2);
+
+	//時間制限
+	GameTimeLimit = GameTimeLimitMax;
+
+	//アイテムの個数の初期化
+	ItemWood = 0;
+	ItemStone = 0;
+
+	CreatePickaxe.Cnt = 0;
+	CreatePickaxe.CntMax = 1;
+	CreateAxe.Cnt = 0;
+	CreateAxe.CntMax = 1;
+	CreateKey.Cnt = 0;
+	CreateKey.CntMax = 1;
+
+	CreatePickaxe.Wood = 1;
+	CreatePickaxe.Stone = 2;
+	CreateAxe.Wood = 1;
+	CreateAxe.Stone = 3;
+	CreateKey.Wood = 10;
+	CreateKey.Stone = 10;
 	
 	return;
 }
 
 VOID EndInit(VOID)
+{
+
+	return;
+}
+
+VOID GameOverInit(VOID)
 {
 
 	return;
@@ -399,10 +519,11 @@ VOID TitleProc(VOID)
 		//次のシーンの初期化をここで行うと楽
 
 		//音楽を止める
-		StopAudio(&sampleBGM);
+		StopAudio(&titleBGM);
 
 		//ゲームの初期化
 		GameInit();
+		PlayInit();
 
 		//プレイ画面に切り替え
 		ChangeScene(GAME_SCENE_PLAY);
@@ -410,7 +531,7 @@ VOID TitleProc(VOID)
 		return;
 	}
 
-	PlayAudio(sampleBGM);	//BGMを鳴らす
+	PlayAudio(titleBGM);	//BGMを鳴らす
 
 	//プレイヤーの動作サンプル
 	/*
@@ -424,49 +545,7 @@ VOID TitleProc(VOID)
 	}
 	*/
 
-	//マップの当たり判定
-	{
-		muki = muki_none;					//最初は向きなし
-		DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
-		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y-=samplePlayerImg.speed; }
-		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y+= samplePlayerImg.speed; }
-		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x-= samplePlayerImg.speed; }
-		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; dummy.x+= samplePlayerImg.speed; }
-
-		CollUpdateDivImage(&dummy);	//当たり判定の更新
-
-		if (CollMap(dummy.coll, map1) == FALSE)
-		{
-			samplePlayerImg = dummy;	//ダミーの情報を戻す
-		}
-
-		if (samplePlayerImg.y < -20) { samplePlayerImg.y = -20; }
-		if (samplePlayerImg.y > MAP1_TATE_MAX * map1.height - samplePlayerImg.height) 
-		{ samplePlayerImg.y = MAP1_TATE_MAX * map1.height - samplePlayerImg.height; }
-
-		if (samplePlayerImg.x < 0) { samplePlayerImg.x = 0; }
-		if (samplePlayerImg.x > MAP1_YOKO_MAX * map1.width - samplePlayerImg.width) 
-		{ samplePlayerImg.x = MAP1_YOKO_MAX * map1.width - samplePlayerImg.width; }
-
-		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
-
-		//イベントマスに当たっているか
-		if (CheckCollRectToRect(samplePlayerImg.coll, sampleevent.coll) == TRUE)
-		{
-			//ゲームデータの初期化
-			GameInit();
-			PlayInit();
-
-			//マップ移動のフラグ
-			sampleevent.can = TRUE;
-
-			//音楽を止める
-			StopAudio(&sampleBGM);
-
-			//プレイ画面に切り替え
-			ChangeScene(GAME_SCENE_PLAY);
-		}
-	}
+	
 
 	return;
 }
@@ -477,7 +556,7 @@ VOID TitleProc(VOID)
 VOID TitleDraw(VOID)
 {
 
-	
+	/*
 	DrawImage(sampleImg);				//サンプル画像の描画
 	DrawDivImage(&sampleDivImg);		//サンプル分割画像の描画
 
@@ -502,7 +581,7 @@ VOID TitleDraw(VOID)
 	DrawStringToHandle(100, 150, "昔々ふぉんとだよ", GetColor(0, 0, 0), sampleFont3.handle);
 
 	//数値を出したいとき
-	DrawFormatStringToHandle(200, 200, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f",GameTimeLimit);
+	DrawFormatStringToHandle(800, 200, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f",GameTimeLimit);
 	
 	//読み込んだデータを描画
 	for (int i = 0; i < ENEMY_MAX; i++)
@@ -510,11 +589,9 @@ VOID TitleDraw(VOID)
 		DrawFormatString(300, 300 + i * 20, GetColor(0, 0, 0), "%s,%2d,%2d,%2d"
 			, enemy[i].Name, enemy[i].HP, enemy[i].ATK, enemy[i].DEF);
 	}
+	*/
 
-	//マップのサンプル
-	DrawMap(map1);
-
-	DrawBox(sampleevent.coll.left, sampleevent.coll.top, sampleevent.coll.right, sampleevent.coll.bottom, GetColor(0, 255, 0), FALSE);
+	DrawImage(TitleImg);
 
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
@@ -540,6 +617,10 @@ VOID PlayProc(VOID)
 
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+		//ゲームデータの初期化
+		GameInit();
+		EndInit();
+
 		//音楽を止める
 		StopAudio(&playBGM);
 
@@ -547,6 +628,99 @@ VOID PlayProc(VOID)
 		ChangeScene(GAME_SCENE_END);
 
 		return;
+	}
+
+	//音楽を再生
+	PlayAudio(playBGM);
+
+	//マップの当たり判定
+	{
+		muki = muki_none;					//最初は向きなし
+		DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
+		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y -= samplePlayerImg.speed; }
+		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y += samplePlayerImg.speed; }
+		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x -= samplePlayerImg.speed; }
+		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; dummy.x += samplePlayerImg.speed; }
+
+		CollUpdateDivImage(&dummy);	//当たり判定の更新
+
+		if (CollMap(dummy.coll, map2) == FALSE)
+		{
+			samplePlayerImg = dummy;	//ダミーの情報を戻す
+		}
+
+		if (samplePlayerImg.y < -20) { samplePlayerImg.y = -20; }
+		if (samplePlayerImg.y > MAP1_TATE_MAX * map1.height - samplePlayerImg.height)
+		{
+			samplePlayerImg.y = MAP1_TATE_MAX * map1.height - samplePlayerImg.height;
+		}
+
+		if (samplePlayerImg.x < 0) { samplePlayerImg.x = 0; }
+		if (samplePlayerImg.x > MAP1_YOKO_MAX * map1.width - samplePlayerImg.width)
+		{
+			samplePlayerImg.x = MAP1_YOKO_MAX * map1.width - samplePlayerImg.width;
+		}
+
+		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
+
+		//イベントマスに当たっているか
+		if (CheckCollRectToRect(samplePlayerImg.coll, Goal.coll) == TRUE && CreateKey.Cnt > 0)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			EndInit();
+
+			//マップ移動のフラグ
+			//sampleevent.can = TRUE;
+
+			//音楽を止める
+			StopAudio(&playBGM);
+
+			//プレイ画面に切り替え
+			ChangeScene(GAME_SCENE_END);
+		}
+
+		CreateItem(&CreatePickaxe);
+		CreateItem(&CreateAxe);
+		CreateItem(&CreateKey);
+
+		if (CheckCollRectToRect(samplePlayerImg.coll, GetItem.coll) == TRUE)
+		{
+			if (KeyClick(KEY_INPUT_Z))
+			{
+				ItemWood++;
+				ItemStone++;
+			}
+		}
+		if (CheckCollRectToRect(samplePlayerImg.coll, GetWood.coll) == TRUE && CreateAxe.Cnt > 0)
+		{
+			if (KeyClick(KEY_INPUT_Z))
+			{
+				ItemWood+=5;
+			}
+		}
+		if (CheckCollRectToRect(samplePlayerImg.coll, GetStone.coll) == TRUE && CreatePickaxe.Cnt > 0)
+		{
+			if (KeyClick(KEY_INPUT_Z))
+			{
+				ItemStone+=5;
+			}
+		}
+
+	}
+
+	GameTimeLimit -= fps.DeltaTime;
+	if (GameTimeLimit <= 0)
+	{
+		//ゲームデータの初期化
+		GameInit();
+		GameOverInit();
+
+		//音楽を止める
+		StopAudio(&playBGM);
+
+		//プレイ画面に切り替え
+		ChangeScene(GAME_SCENE_GAMEOVER);
 	}
 
 	return;
@@ -557,6 +731,30 @@ VOID PlayProc(VOID)
 /// </summary>
 VOID PlayDraw(VOID)
 {
+	//マップのサンプル
+	DrawMap(map2);
+
+	//当たり判定の描画
+	//DrawHitBox(&sampleevent);
+
+	DrawHitBox(&CreatePickaxe);
+	DrawHitBox(&CreateAxe);
+	DrawHitBox(&CreateKey);
+
+	DrawHitBox(&GetItem);
+	DrawHitBox(&GetWood);
+	DrawHitBox(&GetStone);
+
+	DrawHitBox(&Goal);
+
+	//数値を出したいとき
+	DrawFormatStringToHandle(900, GAME_HEIGHT - 100, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f", GameTimeLimit);
+
+	DrawFormatStringToHandle(650, 40, GetColor(0, 0, 0), sampleFont1.handle, "ピッケル:%d\n斧　　　:%d\n鍵　　　:%d\n\n木:%d　石:%d",CreatePickaxe.Cnt,CreateAxe.Cnt,CreateKey.Cnt,ItemWood,ItemStone);
+
+	CreateItemDraw(&CreatePickaxe);
+	CreateItemDraw(&CreateAxe);
+	CreateItemDraw(&CreateKey);
 	
 	DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
 	return;
@@ -578,8 +776,18 @@ VOID End(VOID)
 /// </summary>
 VOID EndProc(VOID)
 {
+	//音楽を再生
+	PlayAudio(endBGM);
+
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+		//ゲームデータの初期化
+		GameInit();
+		TitleInit();
+
+		//音楽を止める
+		StopAudio(&endBGM);
+
 		//タイトル画面に切り替え
 		ChangeScene(GAME_SCENE_TITLE);
 
@@ -594,7 +802,63 @@ VOID EndProc(VOID)
 /// </summary>
 VOID EndDraw(VOID)
 {
+	DrawImage(EndImg);
+
+	//数値を出したいとき
+	DrawFormatStringToHandle(800, 200, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
+
 	DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
+	return;
+}
+
+/// <summary>
+/// ゲームオーバー画面
+/// </summary>
+VOID GameOver(VOID)
+{
+	GameOverProc();	//処理
+	GameOverDraw();	//描画
+
+	return;
+}
+
+/// <summary>
+/// ゲームオーバー画面の処理
+/// </summary>
+VOID GameOverProc(VOID)
+{
+	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	{
+		//初期化
+		GameInit();
+		TitleInit();
+
+		//音楽を止める
+		StopAudio(&gameoverBGM);
+
+		//タイトル画面に切り替え
+		ChangeScene(GAME_SCENE_TITLE);
+
+		return;
+	}
+
+	//音楽を再生
+	PlayAudio(gameoverBGM);
+
+	return;
+}
+
+/// <summary>
+/// ゲームオーバー画面の描画
+/// </summary>
+VOID GameOverDraw(VOID)
+{
+	DrawImage(GameoverImg);
+
+	//数値を出したいとき
+	DrawFormatStringToHandle(800, 200, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
+
+	DrawString(0, 0, "ゲームオーバー画面", GetColor(0, 0, 0));
 	return;
 }
 
@@ -723,10 +987,10 @@ VOID CollUpdateImage(IMAGE* img)
 /// <param name="img">画像構造体のポインタ</param>
 VOID CollUpdateDivImage(DIVIMAGE* div)
 {
-	div->coll.left = div->x;
-	div->coll.top = div->y;
+	div->coll.left = div->x + 5;
+	div->coll.top = div->y + 10;
 
-	div->coll.right = div->x + div->width;
+	div->coll.right = div->x + div->width - 5;
 	div->coll.bottom = div->y + div->height;
 
 	return;
@@ -1150,6 +1414,55 @@ VOID StopAudio(AUDIO* audio)
 {
 	//音楽の停止
 	StopSoundMem(audio->handle);
+
+	return;
+}
+
+/// <summary>
+/// イベントの当たり判定の描画
+/// </summary>
+/// <param name="events"></param>
+VOID DrawHitBox(EVENT* events)
+{
+	if(GAME_DEBUG==TRUE)
+		DrawBox(events->coll.left, events->coll.top, events->coll.right, events->coll.bottom, GetColor(0, 255, 0), FALSE);
+
+	return;
+}
+
+VOID CreateItem(EVENT* events)
+{
+	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE && events->Cnt < events->CntMax)
+	{
+		events->can = TRUE;
+		if (KeyClick(KEY_INPUT_Z))
+		{
+			if (ItemWood >= events->Wood && ItemStone >= events->Stone)
+			{
+				ItemWood -= events->Wood;
+				ItemStone -= events->Stone;
+				events->Cnt++;
+			}
+		}
+	}
+	else
+	{
+		events->can = FALSE;
+	}
+
+	return;
+}
+
+VOID CreateItemDraw(EVENT* events)
+{
+	//クラフト
+	{
+		if (events->can == TRUE)
+		{
+			DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
+				"クラフト必要個数\n木: %d / %d\n石: %d / %d", ItemWood, events->Wood, ItemStone, events->Stone);
+		}
+	}
 
 	return;
 }

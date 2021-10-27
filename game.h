@@ -18,7 +18,7 @@
 
 #define GAME_WINDOW_BAR	0				//ウィンドウバーの種類
 
-#define GAME_DEBUG	TRUE				//デバッグモード
+#define GAME_DEBUG	FALSE				//デバッグモード
 
 #define PATH_MAX	255					//パスの長さ
 #define STR_MAX		255					//文字の長さ
@@ -29,6 +29,7 @@ enum GAME_SCENE {
 	GAME_SCENE_TITLE,
 	GAME_SCENE_PLAY,
 	GAME_SCENE_END,
+	GAME_SCENE_GAMEOVER,
 	GAME_SCENE_CHANGE
 };	//ゲームのシーン
 
@@ -107,6 +108,9 @@ struct EVENT
 
 	int Cnt = -1;
 	int CntMax = -1;
+
+	int Wood = -1;
+	int Stone = -1;
 
 	BOOL can = FALSE;				//実行できるか
 

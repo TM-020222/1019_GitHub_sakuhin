@@ -695,9 +695,9 @@ extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, 
 	events->y = y1;
 
 	events->coll.top = map.height * y1 - 1;
-	events->coll.left = map.width * x2 - 1;
-	events->coll.bottom = map.height * (y2 + 1) + 1;
-	events->coll.right = map.width * (x1 + 1) + 1;
+	events->coll.left = map.width * x1 - 1;
+	events->coll.bottom = map.height * y2 + 1;
+	events->coll.right = map.width * x2 + 1;
 
 	return;
 }
