@@ -55,6 +55,8 @@ const float GameTimeLimitMax=60;
 int ItemWood;
 int ItemStone;
 
+BOOL canGetItem;
+
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
 BOOL GameLoad(VOID);	//データを読込
@@ -112,7 +114,7 @@ VOID ItemEventInit(EVENT* events, int Wood, int Stone, int CntMax);	//アイテム初
 VOID CreateItem(EVENT* events);					//アイテム作成
 VOID CreateItemDraw(EVENT* events);				//アイテム作成時の必要数表示
 
-VOID GetItemSystem(EVENT* events);				//採取の個数変動
+VOID GetItemSystem(EVENT* events, EVENT* tools);				//採取の個数変動
 VOID GetItemDraw(EVENT* events);				//採取時の個数表示
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
@@ -439,6 +441,8 @@ VOID PlayInit(VOID)
 	ItemWood = 0;
 	ItemStone = 0;
 
+	canGetItem = TRUE;
+
 	ItemEventInit(&GetItem,1,1,NULL);
 	ItemEventInit(&GetWood,5,0,NULL);
 	ItemEventInit(&GetStone,0,5,NULL);
@@ -684,9 +688,9 @@ VOID PlayProc(VOID)
 		CreateItem(&CreateAxe);
 		CreateItem(&CreateKey);
 
-		GetItemSystem(&GetItem);
-		GetItemSystem(&GetWood);
-		GetItemSystem(&GetStone);
+		GetItemSystem(&GetItem,NULL);
+		GetItemSystem(&GetWood,&CreateAxe);
+		GetItemSystem(&GetStone,&CreatePickaxe);
 	}
 
 	GameTimeLimit -= fps.DeltaTime;
@@ -1463,15 +1467,30 @@ VOID ItemEventInit(EVENT* events,int Wood,int Stone,int CntMax)
 	return;
 }
 
-VOID GetItemSystem(EVENT* events)
+VOID GetItemSystem(EVENT* events, EVENT* tools)
 {
 	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE)
 	{
-		if (KeyClick(KEY_INPUT_Z))
+		if (tools == NULL || tools->Cnt > 0)
 		{
-			ItemWood += events->Wood;
-			ItemStone += events->Stone;
+			events->can = TRUE;
+			canGetItem = TRUE;
+
+			if (KeyClick(KEY_INPUT_Z))
+			{
+				ItemWood += events->Wood;
+				ItemStone += events->Stone;
+			}
 		}
+		else
+		{
+			events->can = TRUE;
+			canGetItem = FALSE;
+		}
+	}
+	else
+	{
+		events->can = FALSE;
 	}
 
 	return;
@@ -1479,12 +1498,19 @@ VOID GetItemSystem(EVENT* events)
 
 VOID GetItemDraw(EVENT* events)
 {
-	//クラフト
 	{
 		if (events->can == TRUE)
 		{
-			DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
-				"採取個数\n木: %d\n石: %d", ItemWood, events->Wood, ItemStone, events->Stone);
+			if (canGetItem == TRUE)
+			{
+				DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
+					"採取個数\n木: %d\n石: %d", events->Wood, events->Stone);
+			}
+			else
+			{
+				DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
+					"採取不可");
+			}
 		}
 	}
 
