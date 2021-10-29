@@ -152,6 +152,8 @@ IMAGE TitleImg;
 IMAGE EndImg;
 IMAGE GameoverImg;
 
+IMAGE PushEnter;
+
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(
@@ -345,6 +347,7 @@ BOOL GameLoad(VOID)
 	if (LoadImageMem(&TitleImg, ".\\Image\\脱出_タイトル.png") == FALSE) { return FALSE; }
 	if (LoadImageMem(&EndImg, ".\\Image\\脱出_ゲームクリア.png") == FALSE) { return FALSE; }
 	if (LoadImageMem(&GameoverImg, ".\\Image\\脱出_ゲームオーバー.png") == FALSE) { return FALSE; }
+	if (LoadImageMem(&PushEnter, ".\\Image\\脱出_Enter.png") == FALSE) { return FALSE; }
 
 	return TRUE;	//全て読み込みた！
 }
@@ -377,6 +380,7 @@ VOID GameDelete(VOID)
 	DeleteGraph(TitleImg.handle);
 	DeleteGraph(EndImg.handle);
 	DeleteGraph(GameoverImg.handle);
+	DeleteGraph(PushEnter.handle);
 
 	return;
 }
@@ -408,7 +412,11 @@ VOID TitleInit(VOID)
 	TitleImg.IsDraw = TRUE;
 	TitleImg.x = 0;
 	TitleImg.y = 0;
-	
+
+	PushEnter.IsDraw = TRUE;
+	PushEnter.x = 0;
+	PushEnter.y = 0;
+
 	return;
 }
 
@@ -604,6 +612,7 @@ VOID TitleDraw(VOID)
 	*/
 
 	DrawImage(TitleImg);
+	DrawImage(PushEnter);
 
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
