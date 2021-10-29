@@ -614,7 +614,7 @@ VOID TitleDraw(VOID)
 	DrawImage(TitleImg);
 	DrawImage(PushEnter);
 
-	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
+	if(GAME_DEBUG)DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
 }
 
@@ -761,7 +761,7 @@ VOID PlayDraw(VOID)
 	GetItemDraw(&GetWood);
 	GetItemDraw(&GetStone);
 	
-	DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
+	if (GAME_DEBUG)DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
 	return;
 }
 
@@ -812,7 +812,7 @@ VOID EndDraw(VOID)
 	//数値を出したいとき
 	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
 
-	DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
+	if (GAME_DEBUG)DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
 	return;
 }
 
@@ -863,7 +863,7 @@ VOID GameOverDraw(VOID)
 	//数値を出したいとき
 	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
 
-	DrawString(0, 0, "ゲームオーバー画面", GetColor(0, 0, 0));
+	if (GAME_DEBUG)DrawString(0, 0, "ゲームオーバー画面", GetColor(0, 0, 0));
 	return;
 }
 
@@ -970,7 +970,7 @@ VOID ChangeDraw(VOID)
 	//半透明終了
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
-	DrawString(0, 0, "切り替え画面", GetColor(0, 0, 0));
+	if (GAME_DEBUG)DrawString(0, 0, "切り替え画面", GetColor(0, 0, 0));
 	return;
 }
 
