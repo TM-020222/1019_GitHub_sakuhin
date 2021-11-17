@@ -552,14 +552,18 @@ BOOL LoadCSVMap(
 		{
 			for (int yoko = 0; yoko < MAP1_YOKO_MAX; yoko++)
 			{
+				//マップの場所を指定
+				map->x[tate][yoko] = (yoko + 0) * map->width + (GAME_WIDTH / 2 - (MAP1_YOKO_MAX * map->width) / 2);
+				map->y[tate][yoko] = (tate + 0) * map->height + 50;
+
 				//通れないIDなら
 				if (map->CSV_naka_atari[tate][yoko] == MAP_STOP_ID)
 				{
 					//当たり判定を作成
-					map->coll[tate][yoko].left = (yoko + 0) * map->width + 1;
-					map->coll[tate][yoko].right = (yoko + 1) * map->width - 1;
-					map->coll[tate][yoko].top = (tate + 0) * map->height + 1;
-					map->coll[tate][yoko].bottom = (tate + 1) * map->height - 1;
+					map->coll[tate][yoko].left = map->x[tate][yoko] + 1;
+					map->coll[tate][yoko].right = map->x[tate][yoko] + map->width - 1;
+					map->coll[tate][yoko].top = map->y[tate][yoko] + 1;
+					map->coll[tate][yoko].bottom = map->y[tate][yoko] + map->height - 1;
 				}
 				else
 				{
@@ -568,10 +572,6 @@ BOOL LoadCSVMap(
 					map->coll[tate][yoko].top = 0;
 					map->coll[tate][yoko].bottom = 0;
 				}
-				
-				//マップの場所を指定
-				map->x[tate][yoko] = (yoko + 0) * map->width;
-				map->y[tate][yoko] = (tate + 0) * map->height;
 			}
 		}
 	}
@@ -676,28 +676,44 @@ VOID DrawMap(MAP_DATA map)
 	return;
 }
 
+/// <summary>
+/// 単体マス
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="events"></param>
+/// <param name="map"></param>
 extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map)
 {
 	events->x = x;
 	events->y = y;
 
-	events->coll.top = map.height * events->y - 1;
-	events->coll.left = map.width * events->x - 1;
-	events->coll.bottom = map.height * (events->y + 1) + 1;
-	events->coll.right = map.width * (events->x + 1) + 1;
+	events->coll.top = map.y[y][x] - 1;
+	events->coll.left = map.x[y][x] - 1;
+	events->coll.bottom = map.y[y + 1][x + 1] + 1;
+	events->coll.right = map.x[y + 1][x + 1] + 1;
 
 	return;
 }
 
+/// <summary>
+/// 複数マス
+/// </summary>
+/// <param name="x1"></param>
+/// <param name="y1"></param>
+/// <param name="x2"></param>
+/// <param name="y2"></param>
+/// <param name="events"></param>
+/// <param name="map"></param>
 extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DATA map)
 {
 	events->x = x1;
 	events->y = y1;
 
-	events->coll.top = map.height * y1 - 1;
-	events->coll.left = map.width * x1 - 1;
-	events->coll.bottom = map.height * y2 + 1;
-	events->coll.right = map.width * x2 + 1;
+	events->coll.top = map.y[y1][x1] - 1;
+	events->coll.left = map.x[y1][x1] - 1;
+	events->coll.bottom = map.y[y2][x2] + 1;
+	events->coll.right = map.x[y2][x2] + 1;
 
 	return;
 }

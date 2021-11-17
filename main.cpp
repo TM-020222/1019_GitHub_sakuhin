@@ -669,17 +669,17 @@ VOID PlayProc(VOID)
 		{
 			samplePlayerImg = dummy;	//ダミーの情報を戻す
 		}
-
-		if (samplePlayerImg.y < -20) { samplePlayerImg.y = -20; }
-		if (samplePlayerImg.y > MAP1_TATE_MAX * map1.height - samplePlayerImg.height)
+		//画面端にいった場合
+		if (samplePlayerImg.y < map1.y[0][0]) { samplePlayerImg.y = map1.y[0][0]; }	//未確認
+		if (samplePlayerImg.y > map1.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20)
 		{
-			samplePlayerImg.y = MAP1_TATE_MAX * map1.height - samplePlayerImg.height;
+			samplePlayerImg.y = map1.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20;	//マジックナンバー
 		}
 
-		if (samplePlayerImg.x < 0) { samplePlayerImg.x = 0; }
-		if (samplePlayerImg.x > MAP1_YOKO_MAX * map1.width - samplePlayerImg.width)
+		if (samplePlayerImg.x < map1.x[0][0]) { samplePlayerImg.x = map1.x[0][0]; }
+		if (samplePlayerImg.x > map1.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1])
 		{
-			samplePlayerImg.x = MAP1_YOKO_MAX * map1.width - samplePlayerImg.width;
+			samplePlayerImg.x = map1.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
 		}
 
 		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
@@ -1438,6 +1438,9 @@ VOID DrawHitBox(EVENT* events)
 	return;
 }
 
+/// <summary>
+/// アイテム作成
+/// </summary>
 VOID CreateItem(EVENT* events)
 {
 	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE && events->Cnt < events->CntMax)
@@ -1461,6 +1464,9 @@ VOID CreateItem(EVENT* events)
 	return;
 }
 
+/// <summary>
+/// クラフト時のアイテム必要個数の描画
+/// </summary>
 VOID CreateItemDraw(EVENT* events)
 {
 	//クラフト
@@ -1475,6 +1481,13 @@ VOID CreateItemDraw(EVENT* events)
 	return;
 }
 
+/// <summary>
+/// アイテム数の初期化(仮でアイテムと採取地点の関数同一化)
+/// </summary>
+/// <param name="events">イベントの関数</param>
+/// <param name="Wood">木の数</param>
+/// <param name="Stone">石の数</param>
+/// <param name="CntMax">アイテムの最大所持数/NULLなら上限なし(仮)</param>
 VOID ItemEventInit(EVENT* events,int Wood,int Stone,int CntMax)
 {
 	events->Wood = Wood;
@@ -1487,6 +1500,11 @@ VOID ItemEventInit(EVENT* events,int Wood,int Stone,int CntMax)
 	return;
 }
 
+/// <summary>
+/// 採取時のアイテムの加算(簡易)
+/// </summary>
+/// <param name="events">採取イベント</param>
+/// <param name="tools">必要ツールのイベント関数</param>
 VOID GetItemSystem(EVENT* events, EVENT* tools)
 {
 	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE)
@@ -1516,6 +1534,10 @@ VOID GetItemSystem(EVENT* events, EVENT* tools)
 	return;
 }
 
+/// <summary>
+/// 採取アイテム作成
+/// </summary>
+/// <param name="events">採取イベント</param>
 VOID GetItemDraw(EVENT* events)
 {
 	{
