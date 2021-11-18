@@ -54,14 +54,26 @@
 #define CSV_PATH_MAP2_NAKA_ATARI	TEXT(".\\map\\dassyutu_naka_atari.csv")
 #define CSV_PATH_MAP2_UE			TEXT(".\\map\\dassyutu_ue.csv")
 
+#define CSV_PATH_MAINMAP_SHITA			TEXT(".\\map\\MainStage_wide_sita.csv")
+#define CSV_PATH_MAINMAP_NAKA			TEXT(".\\map\\MainStage_wide_naka.csv")
+#define CSV_PATH_MAINMAP_KAGU			TEXT(".\\map\\MainStage_wide_kagu.csv")
+#define CSV_PATH_MAINMAP_NAKA_ATARI		TEXT(".\\map\\MainStage_wide_naka_atari.csv")
+#define CSV_PATH_MAINMAP_UE				TEXT(".\\map\\MainStage_wide_ue.csv")
+
 //マップの書式指定子
 #define CSV_MAP_FORMAT		TEXT("%d,")
 
-#define MAP1_YOKO_MAX			20	//マップの横サイズ
-#define MAP1_TATE_MAX			20	//マップの縦サイズ
+#define MAP1_YOKO_MAX			64	//マップの横サイズ
+#define MAP1_TATE_MAX			64	//マップの縦サイズ
+
+//#define MAP1_YOKO_MAX			20	//マップの横サイズ
+//#define MAP1_TATE_MAX			20	//マップの縦サイズ
 
 #define MAP1_YOKO_DIV			60	//マップの横分割数
 #define MAP1_TATE_DIV			60	//マップの縦分割数
+
+//#define MAP1_YOKO_DIV			60	//マップの横分割数
+//#define MAP1_TATE_DIV			60	//マップの縦分割数
 
 #define MAP_MOVE_ID				56	//通れるマップID
 #define MAP_STOP_ID				57	//通れないマップID
@@ -155,3 +167,4 @@ extern BOOL CollMap(RECT rect, MAP_DATA map);
 extern VOID DrawMap(MAP_DATA map);
 extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map);
 extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DATA map);
+extern VOID MapMove(MAP_DATA* map);

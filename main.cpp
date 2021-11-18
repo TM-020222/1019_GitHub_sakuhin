@@ -334,11 +334,11 @@ BOOL GameLoad(VOID)
 	//マップデータを読み込み
 	if(LoadCSVMap(
 		IMG_PATH_MAP1,
-		CSV_PATH_MAP2_SHITA,
-		CSV_PATH_MAP2_NAKA,
-		CSV_PATH_MAP2_KAGU,
-		CSV_PATH_MAP2_NAKA_ATARI,
-		CSV_PATH_MAP2_UE,
+		CSV_PATH_MAINMAP_SHITA,
+		CSV_PATH_MAINMAP_NAKA,
+		CSV_PATH_MAINMAP_KAGU,
+		CSV_PATH_MAINMAP_NAKA_ATARI,
+		CSV_PATH_MAINMAP_UE,
 		&map2,
 		MAP1_YOKO_DIV,MAP1_TATE_DIV
 	) == FALSE) {return FALSE; }
@@ -424,8 +424,11 @@ VOID PlayInit(VOID)
 {
 	//サンプルプレイヤー初期化
 	samplePlayerImg.speed = 2;
-	samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
-	samplePlayerImg.y = MAP1_TATE_MAX * map2.height / 2 - samplePlayerImg.height / 2;
+	samplePlayerImg.x = 10;
+	samplePlayerImg.y = 10;
+	//samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
+	//samplePlayerImg.y = MAP1_TATE_MAX * map2.height / 2 - samplePlayerImg.height / 2;
+
 	muki = muki_none;
 
 	//サンプルイベントの作成
@@ -658,6 +661,7 @@ VOID PlayProc(VOID)
 	{
 		muki = muki_none;					//最初は向きなし
 		DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
+		DIVIMAGE dummy2 = samplePlayerImg;	//当たり判定のダミー
 		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y -= samplePlayerImg.speed; }
 		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y += samplePlayerImg.speed; }
 		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x -= samplePlayerImg.speed; }
@@ -670,17 +674,57 @@ VOID PlayProc(VOID)
 			samplePlayerImg = dummy;	//ダミーの情報を戻す
 		}
 		//画面端にいった場合
-		if (samplePlayerImg.y < map1.y[0][0]) { samplePlayerImg.y = map1.y[0][0]; }	//未確認
-		if (samplePlayerImg.y > map1.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20)
+		/*if (samplePlayerImg.y < map2.y[0][0]) { samplePlayerImg.y = map2.y[0][0]; }	//未確認
+		if (samplePlayerImg.y > map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20)
 		{
-			samplePlayerImg.y = map1.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20;	//マジックナンバー
+			samplePlayerImg.y = map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20;	//マジックナンバー
 		}
 
-		if (samplePlayerImg.x < map1.x[0][0]) { samplePlayerImg.x = map1.x[0][0]; }
-		if (samplePlayerImg.x > map1.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1])
+		if (samplePlayerImg.x < map2.x[0][0]) { samplePlayerImg.x = map2.x[0][0]; }
+		if (samplePlayerImg.x > map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1])
 		{
-			samplePlayerImg.x = map1.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
+			samplePlayerImg.x = map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
+		}*/
+
+		if (samplePlayerImg.x>=GAME_WIDTH/2 && map2.x[0][0]<=0
+			&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1]>GAME_WIDTH && dummy2.x != samplePlayerImg.x)
+		{
+			samplePlayerImg.screenX = samplePlayerImg.speed;
+			samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
+			MapMove(&map2);
 		}
+		else if (samplePlayerImg.x <= GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
+			&& map2.x[0][0]<0 && dummy2.x != samplePlayerImg.x)
+		{
+			samplePlayerImg.screenX = -samplePlayerImg.speed;
+			samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
+			MapMove(&map2);
+		}
+		else
+		{
+			samplePlayerImg.screenX = 0;
+		}
+
+		if (samplePlayerImg.y>=GAME_HEIGHT/2 && map2.y[0][0]<=0
+			&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1]>GAME_HEIGHT && dummy2.y != samplePlayerImg.y)
+		{
+			samplePlayerImg.screenY = samplePlayerImg.speed;
+			samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
+			MapMove(&map2);
+		}
+		else if (samplePlayerImg.y <= GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
+			&& map2.y[0][0]<0 && dummy2.y != samplePlayerImg.y)
+		{
+			samplePlayerImg.screenY = -samplePlayerImg.speed;
+			samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
+			MapMove(&map2);
+		}
+		else
+		{
+			samplePlayerImg.screenY = 0;
+		}
+
+
 
 		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
 

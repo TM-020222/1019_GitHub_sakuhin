@@ -74,6 +74,9 @@ struct DIVIMAGE
 	BOOL IsAnimLoop = FALSE;		//アニメーションをループさせるか？
 
 	int speed = 0;					//速度
+	int screenX = 0;					//スクロール
+	int screenY = 0;					//スクロール
+
 };
 
 //動画の構造体

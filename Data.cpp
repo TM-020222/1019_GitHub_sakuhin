@@ -553,8 +553,10 @@ BOOL LoadCSVMap(
 			for (int yoko = 0; yoko < MAP1_YOKO_MAX; yoko++)
 			{
 				//マップの場所を指定
-				map->x[tate][yoko] = (yoko + 0) * map->width + (GAME_WIDTH / 2 - (MAP1_YOKO_MAX * map->width) / 2);
-				map->y[tate][yoko] = (tate + 0) * map->height + 50;
+				//map->x[tate][yoko] = (yoko + 0) * map->width + (GAME_WIDTH / 2 - (MAP1_YOKO_MAX * map->width) / 2);
+				map->x[tate][yoko] = (yoko + 0) * map->width;
+
+				map->y[tate][yoko] = (tate + 0) * map->height;
 
 				//通れないIDなら
 				if (map->CSV_naka_atari[tate][yoko] == MAP_STOP_ID)
@@ -605,6 +607,7 @@ BOOL CollMap(RECT rect, MAP_DATA map)
 /// <param name="map">マップ構造体</param>
 VOID DrawMap(MAP_DATA map)
 {
+
 	//画像が描画できるときは
 	if (map.IsDraw == TRUE)
 	{
@@ -714,6 +717,20 @@ extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, 
 	events->coll.left = map.x[y1][x1] - 1;
 	events->coll.bottom = map.y[y2][x2] + 1;
 	events->coll.right = map.x[y2][x2] + 1;
+
+	return;
+}
+
+extern VOID MapMove(MAP_DATA* map)
+{
+	for (int j = 0; j < MAP1_TATE_MAX; j++)
+	{
+		for (int i = 0; i < MAP1_YOKO_MAX; i++)
+		{
+			map->x[i][j] -= samplePlayerImg.screenX;
+			map->y[i][j] -= samplePlayerImg.screenY;
+		}
+	}
 
 	return;
 }
