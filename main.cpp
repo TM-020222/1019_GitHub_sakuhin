@@ -117,6 +117,8 @@ VOID CreateItemDraw(EVENT* events);				//アイテム作成時の必要数表示
 VOID GetItemSystem(EVENT* events, EVENT* tools);				//採取の個数変動
 VOID GetItemDraw(EVENT* events);				//採取時の個数表示
 
+VOID SetEventUpdate();							//イベントの場所更新
+
 //★★★ゲーム共通のプロトタイプ宣言★★★
 
 //サンプルの素材
@@ -486,6 +488,25 @@ VOID GameOverInit(VOID)
 }
 
 /// <summary>
+/// イベントの座標の更新
+/// </summary>
+VOID SetEventUpdate()
+{
+	//イベント
+	{
+		CreateEventMass(3, 9, &CreatePickaxe, map2);
+		CreateEventMass(16, 9, &CreateAxe, map2);
+		CreateEventMass(16, 4, &CreateKey, map2);
+
+		CreateEventMultiMass(8, 15, 12, 18, &GetItem, map2);
+		CreateEventMultiMass(2, 16, 4, 18, &GetWood, map2);
+		CreateEventMultiMass(16, 16, 19, 18, &GetStone, map2);
+
+		CreateEventMultiMass(9, 1, 11, 2, &Goal, map2);
+	}
+}
+
+/// <summary>
 /// シーンを切り替える関数
 /// </summary>
 /// <param name="scene">シーン</param>
@@ -657,6 +678,8 @@ VOID PlayProc(VOID)
 	//音楽を再生
 	PlayAudio(playBGM);
 
+	SetEventUpdate();		//イベントの座標の更新
+
 	//マップの当たり判定
 	{
 		muki = muki_none;					//最初は向きなし
@@ -691,14 +714,12 @@ VOID PlayProc(VOID)
 		{
 			samplePlayerImg.screenX = samplePlayerImg.speed;
 			samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
-			MapMove(&map2);
 		}
 		else if (samplePlayerImg.x <= GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
 			&& map2.x[0][0]<0 && dummy2.x != samplePlayerImg.x)
 		{
 			samplePlayerImg.screenX = -samplePlayerImg.speed;
 			samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
-			MapMove(&map2);
 		}
 		else
 		{
@@ -710,19 +731,19 @@ VOID PlayProc(VOID)
 		{
 			samplePlayerImg.screenY = samplePlayerImg.speed;
 			samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
-			MapMove(&map2);
 		}
 		else if (samplePlayerImg.y <= GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
 			&& map2.y[0][0]<0 && dummy2.y != samplePlayerImg.y)
 		{
 			samplePlayerImg.screenY = -samplePlayerImg.speed;
 			samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
-			MapMove(&map2);
 		}
 		else
 		{
 			samplePlayerImg.screenY = 0;
 		}
+
+		MapMove(&map2);		//マップの移動
 
 
 
