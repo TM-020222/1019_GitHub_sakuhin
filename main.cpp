@@ -57,6 +57,8 @@ int ItemStone;
 
 BOOL canGetItem;
 
+int MenuCnt;
+
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
 BOOL GameLoad(VOID);	//データを読込
@@ -155,6 +157,13 @@ IMAGE EndImg;
 IMAGE GameoverImg;
 
 IMAGE PushEnter;
+
+BOOL MenuScreen;
+
+//メニューの文字
+BOOL MenuString1;
+BOOL MenuString2;
+BOOL MenuString3;
 
 
 // プログラムは WinMain から始まります
@@ -425,7 +434,7 @@ VOID TitleInit(VOID)
 VOID PlayInit(VOID)
 {
 	//サンプルプレイヤー初期化
-	samplePlayerImg.speed = 2;
+	samplePlayerImg.speed = 4;
 	samplePlayerImg.x = 10;
 	samplePlayerImg.y = 10;
 	//samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
@@ -463,6 +472,15 @@ VOID PlayInit(VOID)
 	ItemEventInit(&CreatePickaxe, 1, 2, 1);
 	ItemEventInit(&CreateAxe, 1, 3, 1);
 	ItemEventInit(&CreateKey, 10, 10, 1);
+
+	//メニューを開いていない
+	MenuScreen = FALSE;
+
+	MenuString1 = TRUE;
+	MenuString2 = FALSE;
+	MenuString3 = FALSE;
+
+	MenuCnt = 0;
 	
 	return;
 }
@@ -675,120 +693,182 @@ VOID PlayProc(VOID)
 		return;
 	}
 
-	//音楽を再生
-	PlayAudio(playBGM);
 
 	SetEventUpdate();		//イベントの座標の更新
 
-	//マップの当たり判定
+	if (KeyClick(KEY_INPUT_X))
 	{
-		muki = muki_none;					//最初は向きなし
-		DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
-		DIVIMAGE dummy2 = samplePlayerImg;	//当たり判定のダミー
-		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y -= samplePlayerImg.speed; }
-		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y += samplePlayerImg.speed; }
-		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x -= samplePlayerImg.speed; }
-		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; dummy.x += samplePlayerImg.speed; }
+		if (MenuScreen == TRUE)
+		{ MenuScreen = FALSE; }
+		else if (MenuScreen == FALSE)
+		{ MenuScreen = TRUE; }
+	}
 
-		CollUpdateDivImage(&dummy);	//当たり判定の更新
-
-		if (CollMap(dummy.coll, map2) == FALSE)
+	if (MenuScreen == FALSE)
+	{
+		//マップの当たり判定
 		{
-			samplePlayerImg = dummy;	//ダミーの情報を戻す
+			muki = muki_none;					//最初は向きなし
+			DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
+			DIVIMAGE dummy2 = samplePlayerImg;	//当たり判定のダミー
+			if (KeyDown(KEY_INPUT_UP)) { muki = muki_ue; dummy.y -= samplePlayerImg.speed; }
+			else if (KeyDown(KEY_INPUT_DOWN)) { muki = muki_shita; dummy.y += samplePlayerImg.speed; }
+			if (KeyDown(KEY_INPUT_LEFT)) { muki = muki_hidari; dummy.x -= samplePlayerImg.speed; }
+			else if (KeyDown(KEY_INPUT_RIGHT)) { muki = muki_migi; dummy.x += samplePlayerImg.speed; }
+
+			CollUpdateDivImage(&dummy);	//当たり判定の更新
+
+			if (CollMap(dummy.coll, map2) == FALSE)
+			{
+				samplePlayerImg = dummy;	//ダミーの情報を戻す
+			}
+			//画面端にいった場合
+			/*if (samplePlayerImg.y < map2.y[0][0]) { samplePlayerImg.y = map2.y[0][0]; }	//未確認
+			if (samplePlayerImg.y > map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20)
+			{
+				samplePlayerImg.y = map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20;	//マジックナンバー
+			}
+
+			if (samplePlayerImg.x < map2.x[0][0]) { samplePlayerImg.x = map2.x[0][0]; }
+			if (samplePlayerImg.x > map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1])
+			{
+				samplePlayerImg.x = map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
+			}*/
+
+			//プレイヤーの幅の考慮無し,要修正
+			if (samplePlayerImg.x >= GAME_WIDTH / 2 && map2.x[0][0] <= 0
+				&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_WIDTH && dummy2.x != samplePlayerImg.x)
+			{
+				samplePlayerImg.screenX = samplePlayerImg.speed;
+				samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
+			}
+			else if (samplePlayerImg.x <= GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
+				&& map2.x[0][0] < 0 && dummy2.x != samplePlayerImg.x)
+			{
+				samplePlayerImg.screenX = -samplePlayerImg.speed;
+				samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
+			}
+			else
+			{
+				samplePlayerImg.screenX = 0;
+			}
+
+			if (samplePlayerImg.y >= GAME_HEIGHT / 2 && map2.y[0][0] <= 0
+				&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_HEIGHT && dummy2.y != samplePlayerImg.y)
+			{
+				samplePlayerImg.screenY = samplePlayerImg.speed;
+				samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
+			}
+			else if (samplePlayerImg.y <= GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
+				&& map2.y[0][0] < 0 && dummy2.y != samplePlayerImg.y)
+			{
+				samplePlayerImg.screenY = -samplePlayerImg.speed;
+				samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
+			}
+			else
+			{
+				samplePlayerImg.screenY = 0;
+			}
+
+			MapMove(&map2);		//マップの移動
+
+
+
+			CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
+
+			//イベントマスに当たっているか
+			if (CheckCollRectToRect(samplePlayerImg.coll, Goal.coll) == TRUE && CreateKey.Cnt > 0)
+			{
+				//ゲームデータの初期化
+				GameInit();
+				EndInit();
+
+				//マップ移動のフラグ
+				//sampleevent.can = TRUE;
+
+				//音楽を止める
+				StopAudio(&playBGM);
+
+				//プレイ画面に切り替え
+				ChangeScene(GAME_SCENE_END);
+			}
+
+			CreateItem(&CreatePickaxe);
+			CreateItem(&CreateAxe);
+			CreateItem(&CreateKey);
+
+			GetItemSystem(&GetItem, NULL);
+			GetItemSystem(&GetWood, &CreateAxe);
+			GetItemSystem(&GetStone, &CreatePickaxe);
 		}
-		//画面端にいった場合
-		/*if (samplePlayerImg.y < map2.y[0][0]) { samplePlayerImg.y = map2.y[0][0]; }	//未確認
-		if (samplePlayerImg.y > map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20)
-		{
-			samplePlayerImg.y = map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20;	//マジックナンバー
-		}
 
-		if (samplePlayerImg.x < map2.x[0][0]) { samplePlayerImg.x = map2.x[0][0]; }
-		if (samplePlayerImg.x > map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1])
-		{
-			samplePlayerImg.x = map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
-		}*/
-
-		if (samplePlayerImg.x>=GAME_WIDTH/2 && map2.x[0][0]<=0
-			&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1]>GAME_WIDTH && dummy2.x != samplePlayerImg.x)
-		{
-			samplePlayerImg.screenX = samplePlayerImg.speed;
-			samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
-		}
-		else if (samplePlayerImg.x <= GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
-			&& map2.x[0][0]<0 && dummy2.x != samplePlayerImg.x)
-		{
-			samplePlayerImg.screenX = -samplePlayerImg.speed;
-			samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
-		}
-		else
-		{
-			samplePlayerImg.screenX = 0;
-		}
-
-		if (samplePlayerImg.y>=GAME_HEIGHT/2 && map2.y[0][0]<=0
-			&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1]>GAME_HEIGHT && dummy2.y != samplePlayerImg.y)
-		{
-			samplePlayerImg.screenY = samplePlayerImg.speed;
-			samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
-		}
-		else if (samplePlayerImg.y <= GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
-			&& map2.y[0][0]<0 && dummy2.y != samplePlayerImg.y)
-		{
-			samplePlayerImg.screenY = -samplePlayerImg.speed;
-			samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
-		}
-		else
-		{
-			samplePlayerImg.screenY = 0;
-		}
-
-		MapMove(&map2);		//マップの移動
-
-
-
-		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
-
-		//イベントマスに当たっているか
-		if (CheckCollRectToRect(samplePlayerImg.coll, Goal.coll) == TRUE && CreateKey.Cnt > 0)
+		GameTimeLimit -= fps.DeltaTime;
+		if (GameTimeLimit <= 0)
 		{
 			//ゲームデータの初期化
 			GameInit();
-			EndInit();
-
-			//マップ移動のフラグ
-			//sampleevent.can = TRUE;
+			GameOverInit();
 
 			//音楽を止める
 			StopAudio(&playBGM);
 
 			//プレイ画面に切り替え
-			ChangeScene(GAME_SCENE_END);
+			ChangeScene(GAME_SCENE_GAMEOVER);
 		}
-
-		CreateItem(&CreatePickaxe);
-		CreateItem(&CreateAxe);
-		CreateItem(&CreateKey);
-
-		GetItemSystem(&GetItem,NULL);
-		GetItemSystem(&GetWood,&CreateAxe);
-		GetItemSystem(&GetStone,&CreatePickaxe);
 	}
-
-	GameTimeLimit -= fps.DeltaTime;
-	if (GameTimeLimit <= 0)
+	else if(MenuScreen==TRUE)
 	{
-		//ゲームデータの初期化
-		GameInit();
-		GameOverInit();
+		//メニューの操作
+		{
+			if (KeyClick(KEY_INPUT_DOWN))
+			{
+				MenuCnt++;
+			}
+			else if (KeyClick(KEY_INPUT_UP))
+			{
+				MenuCnt--;
+			}
 
-		//音楽を止める
-		StopAudio(&playBGM);
+			if (MenuCnt < 0)
+			{
+				MenuCnt = 2;
+			}
+			else if (MenuCnt > 2)
+			{
+				MenuCnt = 0;
+			}
 
-		//プレイ画面に切り替え
-		ChangeScene(GAME_SCENE_GAMEOVER);
+
+			switch (MenuCnt)
+			{
+			case 0:
+			{
+				MenuString1 = TRUE;
+				MenuString2 = FALSE;
+				MenuString3 = FALSE;
+				break;
+			}
+			case 1:
+			{
+				MenuString1 = FALSE;
+				MenuString2 = TRUE;
+				MenuString3 = FALSE;
+				break;
+			}
+			case 2:
+			{
+				MenuString1 = FALSE;
+				MenuString2 = FALSE;
+				MenuString3 = TRUE;
+				break;
+			}
+			default:
+			{
+				MenuCnt = 0;
+			}
+			}
+		}
 	}
-
 	return;
 }
 
@@ -825,6 +905,38 @@ VOID PlayDraw(VOID)
 	GetItemDraw(&GetItem);
 	GetItemDraw(&GetWood);
 	GetItemDraw(&GetStone);
+
+	if(MenuScreen==TRUE)
+	{
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
+		DrawBox(0, 0, GAME_WIDTH, GAME_HEIGHT, GetColor(0, 0, 0), TRUE);
+
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+		DrawBox(GAME_WIDTH / 6, GAME_HEIGHT / 6, GAME_WIDTH * 5 / 6, GAME_HEIGHT * 5 / 6, GetColor(200, 200, 200), TRUE);
+
+		DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(180, 180, 180), TRUE);
+		DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(180, 180, 180), TRUE);
+
+		if(MenuString1==FALSE)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(100, 100, 100), FALSE);
+		else
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(200, 200, 200), FALSE);
+
+		if (MenuString2 == FALSE)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "てすと2", GetColor(100, 100, 100), FALSE);
+		else
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "てすと2", GetColor(200, 200, 200), FALSE);
+
+		if (MenuString3 == FALSE)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(100, 100, 100), FALSE);
+		else
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(200, 200, 200), FALSE);
+
+	}
+	else if(MenuScreen==FALSE)
+	{SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0); }
+
 	
 	if (GAME_DEBUG)DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
 	return;
