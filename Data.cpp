@@ -601,6 +601,37 @@ BOOL CollMap(RECT rect, MAP_DATA map)
 	return FALSE;
 }
 
+VOID CollMapUpdate(MAP_DATA* map)
+{
+	//マップの当たり判定を作成
+	{
+		for (int tate = 0; tate < MAP1_TATE_MAX; tate++)
+		{
+			for (int yoko = 0; yoko < MAP1_YOKO_MAX; yoko++)
+			{
+				//通れないIDなら
+				if (map->CSV_naka_atari[tate][yoko] == MAP_STOP_ID)
+				{
+					//当たり判定を作成
+					map->coll[tate][yoko].left = map->x[tate][yoko] + 1;
+					map->coll[tate][yoko].right = map->x[tate][yoko] + map->width - 1;
+					map->coll[tate][yoko].top = map->y[tate][yoko] + 1;
+					map->coll[tate][yoko].bottom = map->y[tate][yoko] + map->height - 1;
+				}
+				else
+				{
+					map->coll[tate][yoko].left = 0;
+					map->coll[tate][yoko].right = 0;
+					map->coll[tate][yoko].top = 0;
+					map->coll[tate][yoko].bottom = 0;
+				}
+			}
+		}
+	}
+
+	return;
+}
+
 /// <summary>
 /// マップ描画
 /// </summary>
@@ -686,7 +717,7 @@ VOID DrawMap(MAP_DATA map)
 /// <param name="y"></param>
 /// <param name="events"></param>
 /// <param name="map"></param>
-extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map)
+VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map)
 {
 	events->x = x;
 	events->y = y;
@@ -708,7 +739,7 @@ extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map)
 /// <param name="y2"></param>
 /// <param name="events"></param>
 /// <param name="map"></param>
-extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DATA map)
+VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DATA map)
 {
 	events->x = x1;
 	events->y = y1;
@@ -721,7 +752,7 @@ extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, 
 	return;
 }
 
-extern VOID MapMove(MAP_DATA* map)
+VOID MapMove(MAP_DATA* map)
 {
 	for (int j = 0; j < MAP1_TATE_MAX; j++)
 	{

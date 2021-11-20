@@ -57,7 +57,10 @@ int ItemStone;
 
 BOOL canGetItem;
 
-int MenuCnt;
+
+int MenuStringLeft;
+int MenuStringRight;
+
 
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
@@ -160,10 +163,7 @@ IMAGE PushEnter;
 
 BOOL MenuScreen;
 
-//メニューの文字
-BOOL MenuString1;
-BOOL MenuString2;
-BOOL MenuString3;
+BOOL MenuRight;
 
 
 // プログラムは WinMain から始まります
@@ -476,11 +476,11 @@ VOID PlayInit(VOID)
 	//メニューを開いていない
 	MenuScreen = FALSE;
 
-	MenuString1 = TRUE;
-	MenuString2 = FALSE;
-	MenuString3 = FALSE;
+	MenuStringLeft = 0;
+	MenuStringRight = 0;
 
-	MenuCnt = 0;
+	MenuRight = FALSE;
+
 	
 	return;
 }
@@ -698,10 +698,12 @@ VOID PlayProc(VOID)
 
 	if (KeyClick(KEY_INPUT_X))
 	{
-		if (MenuScreen == TRUE)
-		{ MenuScreen = FALSE; }
+		if (MenuScreen == TRUE && MenuRight == FALSE)
+		{ MenuScreen = FALSE;}
+		else if (MenuRight == TRUE)
+		{ MenuRight = FALSE;}
 		else if (MenuScreen == FALSE)
-		{ MenuScreen = TRUE; }
+		{ MenuScreen = TRUE;}
 	}
 
 	if (MenuScreen == FALSE)
@@ -717,6 +719,7 @@ VOID PlayProc(VOID)
 			else if (KeyDown(KEY_INPUT_RIGHT)) { muki = muki_migi; dummy.x += samplePlayerImg.speed; }
 
 			CollUpdateDivImage(&dummy);	//当たり判定の更新
+			CollMapUpdate(&map2);		//マップの当たり判定更新
 
 			if (CollMap(dummy.coll, map2) == FALSE)
 			{
@@ -822,51 +825,49 @@ VOID PlayProc(VOID)
 		{
 			if (KeyClick(KEY_INPUT_DOWN))
 			{
-				MenuCnt++;
+				if (MenuRight == FALSE)
+				{
+					MenuStringLeft++;
+					MenuStringRight = 0;
+				}
+				if (MenuRight == TRUE)
+					MenuStringRight++;
 			}
 			else if (KeyClick(KEY_INPUT_UP))
 			{
-				MenuCnt--;
+				if (MenuRight == FALSE)
+				{
+					MenuStringLeft--;
+					MenuStringRight = 0;
+				}
+				if (MenuRight == TRUE)
+					MenuStringRight--;
 			}
 
-			if (MenuCnt < 0)
+			if (MenuStringLeft < 0)
 			{
-				MenuCnt = 2;
+				MenuStringLeft = 2;
 			}
-			else if (MenuCnt > 2)
+			else if (MenuStringLeft > 2)
 			{
-				MenuCnt = 0;
+				MenuStringLeft = 0;
+			}
+			if (MenuStringRight < 0)
+			{
+				MenuStringRight = 2;
+			}
+			else if (MenuStringRight > 2)
+			{
+				MenuStringRight = 0;
 			}
 
 
-			switch (MenuCnt)
+			if (KeyClick(KEY_INPUT_Z))
 			{
-			case 0:
-			{
-				MenuString1 = TRUE;
-				MenuString2 = FALSE;
-				MenuString3 = FALSE;
-				break;
+				if(MenuRight==FALSE)
+				{ MenuRight = TRUE;}
 			}
-			case 1:
-			{
-				MenuString1 = FALSE;
-				MenuString2 = TRUE;
-				MenuString3 = FALSE;
-				break;
-			}
-			case 2:
-			{
-				MenuString1 = FALSE;
-				MenuString2 = FALSE;
-				MenuString3 = TRUE;
-				break;
-			}
-			default:
-			{
-				MenuCnt = 0;
-			}
-			}
+
 		}
 	}
 	return;
@@ -915,27 +916,97 @@ VOID PlayDraw(VOID)
 
 		DrawBox(GAME_WIDTH / 6, GAME_HEIGHT / 6, GAME_WIDTH * 5 / 6, GAME_HEIGHT * 5 / 6, GetColor(200, 200, 200), TRUE);
 
-		DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(180, 180, 180), TRUE);
-		DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(180, 180, 180), TRUE);
-
-		if(MenuString1==FALSE)
-			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(100, 100, 100), FALSE);
+		//左ブロック
+		if(MenuRight==FALSE)
+			DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
 		else
+		{
+			DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
+		}
+		
+
+		if(MenuStringLeft != 0)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(100, 100, 100), FALSE);
+		else 
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(200, 200, 200), FALSE);
 
-		if (MenuString2 == FALSE)
+		if (MenuStringLeft != 1)
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "てすと2", GetColor(100, 100, 100), FALSE);
 		else
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "てすと2", GetColor(200, 200, 200), FALSE);
 
-		if (MenuString3 == FALSE)
+		if (MenuStringLeft != 2)
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(100, 100, 100), FALSE);
 		else
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(200, 200, 200), FALSE);
 
+		//右ブロック
+		if (MenuRight == FALSE)
+		{
+			DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
+		}
+		else
+			DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
+
+		//右側の文字 汚いので要修正
+		if (MenuStringLeft == 0)
+		{
+			if (MenuStringRight == 0 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと4", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと4", GetColor(100, 100, 100), FALSE);
+
+			if (MenuStringRight == 1 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと5", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと5", GetColor(100, 100, 100), FALSE);
+
+			if (MenuStringRight == 2 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと6", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと6", GetColor(100, 100, 100), FALSE);
+
+		}
+		if (MenuStringLeft == 1)
+		{
+			if (MenuStringRight == 0 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと7", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと7", GetColor(100, 100, 100), FALSE);
+
+			if (MenuStringRight == 1 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと8", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと8", GetColor(100, 100, 100), FALSE);
+
+			if (MenuStringRight == 2 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと9", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと9", GetColor(100, 100, 100), FALSE);
+
+		}
+		if (MenuStringLeft == 2)
+		{
+			if (MenuStringRight == 0 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと10", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと10", GetColor(100, 100, 100), FALSE);
+
+			if (MenuStringRight == 1 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと11", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと11", GetColor(100, 100, 100), FALSE);
+
+			if (MenuStringRight == 2 && MenuRight == TRUE)
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと12", GetColor(200, 200, 200), FALSE);
+			else
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと12", GetColor(100, 100, 100), FALSE);
+
+		}
+
 	}
-	else if(MenuScreen==FALSE)
-	{SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0); }
+	//else if(MenuScreen==FALSE)
+	//{SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0); }
 
 	
 	if (GAME_DEBUG)DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
