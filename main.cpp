@@ -864,8 +864,14 @@ VOID PlayProc(VOID)
 
 			if (KeyClick(KEY_INPUT_Z))
 			{
-				if(MenuRight==FALSE)
-				{ MenuRight = TRUE;}
+				if (MenuRight == FALSE)
+				{
+					MenuRight = TRUE;
+				}
+				else
+				{
+					
+				}
 			}
 
 		}
