@@ -70,6 +70,7 @@ VOID GameDelete(VOID);	//データを削除
 
 VOID TitleInit(VOID);
 VOID PlayInit(VOID);
+VOID BattleInit(VOID);
 VOID EndInit(VOID);
 VOID GameOverInit(VOID);
 
@@ -80,6 +81,10 @@ VOID TitleDraw(VOID);	//タイトル画面(描画)
 VOID Play(VOID);		//プレイ画面
 VOID PlayProc(VOID);	//プレイ画面(処理)
 VOID PlayDraw(VOID);	//プレイ画面(描画)
+
+VOID Battle(VOID);		//プレイ画面
+VOID BattleProc(VOID);	//プレイ画面(処理)
+VOID BattleDraw(VOID);	//プレイ画面(描画)
 
 VOID End(VOID);			//エンド画面
 VOID EndProc(VOID);		//エンド画面(処理)
@@ -247,6 +252,9 @@ int WINAPI WinMain(
 			break;
 		case GAME_SCENE_PLAY:
 			Play();				//プレイ画面
+			break;
+		case GAME_SCENE_BATTLE:
+			Battle();				//プレイ画面
 			break;
 		case GAME_SCENE_END:
 			End();				//エンド画面
@@ -482,6 +490,13 @@ VOID PlayInit(VOID)
 	MenuRight = FALSE;
 
 	
+	return;
+}
+
+VOID BattleInit()
+{
+
+
 	return;
 }
 
@@ -1019,6 +1034,27 @@ VOID PlayDraw(VOID)
 	return;
 }
 
+VOID Battle()
+{
+
+
+	return;
+}
+
+VOID BattleProc()
+{
+
+
+	return;
+}
+
+VOID BattleDraw()
+{
+
+
+	return;
+}
+
 /// <summary>
 /// エンド画面
 /// </summary>
@@ -1195,6 +1231,9 @@ VOID ChangeDraw(VOID)
 		break;
 	case GAME_SCENE_PLAY:
 		PlayDraw();		//プレイ画面の描画
+		break;
+	case GAME_SCENE_BATTLE:
+		BattleDraw();		//プレイ画面の描画
 		break;
 	case GAME_SCENE_END:
 		EndDraw();		//エンド画面の描画
