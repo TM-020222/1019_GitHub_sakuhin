@@ -702,8 +702,8 @@ VOID PlayProc(VOID)
 		//音楽を止める
 		StopAudio(&playBGM);
 
-		//プレイ画面に切り替え
-		ChangeScene(GAME_SCENE_END);
+		//戦闘画面に切り替え
+		ChangeScene(GAME_SCENE_BATTLE);
 
 		return;
 	}
@@ -1036,21 +1036,50 @@ VOID PlayDraw(VOID)
 
 VOID Battle()
 {
-
+	BattleProc();
+	BattleDraw();
 
 	return;
 }
 
 VOID BattleProc()
 {
+	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	{
+		//ゲームデータの初期化
+		GameInit();
+		EndInit();
 
+		//音楽を止める
+		//StopAudio(&playBGM);
+
+		//エンド画面に切り替え
+		ChangeScene(GAME_SCENE_END);
+
+		return;
+	}
+
+	if (KeyClick(KEY_INPUT_SPACE) == TRUE)
+	{
+		//ゲームデータの初期化
+		GameInit();
+		GameOverInit();
+
+		//音楽を止める
+		//StopAudio(&playBGM);
+
+		//ゲームオーバー画面に切り替え
+		ChangeScene(GAME_SCENE_GAMEOVER);
+
+		return;
+	}
 
 	return;
 }
 
 VOID BattleDraw()
 {
-
+	if (GAME_DEBUG)DrawString(0, 0, "戦闘画面", GetColor(0, 0, 0));
 
 	return;
 }
