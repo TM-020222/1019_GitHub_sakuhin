@@ -22,7 +22,7 @@
 #define CSV_CHARA_FORMAT	TEXT("%d,%[^,],%d,%d,%d,%d,%d,%d")
 
 //敵データ
-#define ENEMY_MAX	8
+#define ENEMY_MAX	1
 
 //エラーメッセージ
 #define SCORE_CREATE_ERR_TITLE	TEXT("スコアデータ作成エラー")
