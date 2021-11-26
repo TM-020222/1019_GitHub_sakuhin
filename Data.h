@@ -16,10 +16,11 @@
 
 //キャラデータのパス
 #define CSV_PATH_ENEMY		TEXT(".\\Data\\enemy.csv")
+#define CSV_PATH_PLAYER		TEXT(".\\Data\\playchara.csv")
 
 //データの書式指定子
 //キャラクターの書式指定子
-#define CSV_CHARA_FORMAT	TEXT("%d,%[^,],%d,%d,%d,%d,%d,%d")
+#define CSV_CHARA_FORMAT	TEXT("%d,%[^,],%d,%d,%d,%d,%d,%d,%d,%d")
 
 //敵データ
 #define ENEMY_MAX	1
@@ -87,11 +88,13 @@ struct CHARA_DATA
 
 	//実際に使う値
 	int HP;					//HP
+	int MP;					//MP
 	int ATK;				//攻撃力
 	int DEF;				//防御力
 	
 	//最大値
 	int MAX_HP;				//HP
+	int MAX_MP;				//MP
 	int MAX_ATK;			//攻撃力
 	int MAX_DEF;			//防御力
 };

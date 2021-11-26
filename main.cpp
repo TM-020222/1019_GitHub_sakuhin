@@ -183,6 +183,7 @@ BOOL MenuRight;
 
 //戦闘画面
 CHARA_DATA Battleenemy[ENEMY_MAX];
+CHARA_DATA PlayChara;
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(
@@ -387,6 +388,9 @@ BOOL GameLoad(VOID)
 	//敵データを読み込み
 	if (LoadCSVChara(CSV_PATH_ENEMY, &Battleenemy[0], ENEMY_MAX, TRUE) == FALSE) { return FALSE; }
 
+	//プレイヤーデータを読み込み
+	if (LoadCSVChara(CSV_PATH_PLAYER, &PlayChara, 1, TRUE) == FALSE) { return FALSE; }
+
 
 	return TRUE;	//全て読み込みた！
 }
@@ -524,8 +528,13 @@ VOID BattleInit()
 	for (int i = 0; i < ENEMY_MAX; i++)
 	{
 		Battleenemy[i].HP = Battleenemy[i].MAX_HP;
+		Battleenemy[i].MP = Battleenemy[i].MAX_MP;
 
 	}
+
+	PlayChara.HP = PlayChara.MAX_HP;
+	PlayChara.MP = PlayChara.MAX_MP;
+
 	turn = 0;
 
 	PlayerTurn = FALSE;
@@ -1189,6 +1198,11 @@ VOID BattleProc()
 		{
 			Battleenemy[0].HP--;
 		}
+		if (EnemyResult == TRUE)
+		{
+			Battleenemy[0].MP-=2;
+			PlayChara.HP--;
+		}
 	}
 
 	return;
@@ -1210,27 +1224,41 @@ VOID BattleDraw()
 
 	//MP
 	DrawBox(enemyImg1.x + enemyImg1.width+75, enemyImg1.y + enemyImg1.height / 2 + 25, enemyImg1.x + enemyImg1.width + 275, enemyImg1.y + enemyImg1.height / 2 + 10, GetColor(150, 150, 150), TRUE);
-	DrawBox(enemyImg1.x + enemyImg1.width+75, enemyImg1.y + enemyImg1.height / 2 + 25, enemyImg1.x + enemyImg1.width + 175, enemyImg1.y + enemyImg1.height / 2 + 10, GetColor(0, 0, 255), TRUE);
-	DrawFormatString(enemyImg1.x + enemyImg1.width+10, enemyImg1.y + enemyImg1.height / 2 + 8, GetColor(0, 0, 0), "%2d/%2d", Battleenemy[0].HP, Battleenemy[0].MAX_HP);
+	DrawBox(enemyImg1.x + enemyImg1.width+75, enemyImg1.y + enemyImg1.height / 2 + 25, enemyImg1.x + enemyImg1.width + 75 + ((Battleenemy[0].MP * 100 / Battleenemy[0].MAX_MP) * 2)
+		, enemyImg1.y + enemyImg1.height / 2 + 10, GetColor(0, 0, 255), TRUE);
+	DrawFormatString(enemyImg1.x + enemyImg1.width+10, enemyImg1.y + enemyImg1.height / 2 + 8, GetColor(0, 0, 0), "%2d/%2d", Battleenemy[0].MP, Battleenemy[0].MAX_MP);
 	//MP未実装
 
 
 	//味方のウィンドウ+バー
-	DrawBox(240, GAME_HEIGHT - 150, GAME_WIDTH - 200, GAME_HEIGHT - 50, GetColor(230, 230, 230), TRUE);
-	DrawString(250, GAME_HEIGHT - 135, "HP", GetColor(200, 0, 0), FALSE);
-	DrawString(250, GAME_HEIGHT - 85, "MP", GetColor(0, 0, 200), FALSE);
+	DrawBox(180, GAME_HEIGHT - 150, GAME_WIDTH - 200, GAME_HEIGHT - 50, GetColor(230, 230, 230), TRUE);
+	DrawString(190, GAME_HEIGHT - 135, "HP", GetColor(200, 0, 0), FALSE);
+	DrawFormatString(220, GAME_HEIGHT - 135, GetColor(0, 0, 0), "%2d/%2d", PlayChara.HP,PlayChara.MAX_HP);
+
+	DrawString(190, GAME_HEIGHT - 85, "MP", GetColor(0, 0, 200), FALSE);
+	DrawFormatString(220, GAME_HEIGHT - 85, GetColor(0, 0, 0), "%2d/%2d", PlayChara.MP, PlayChara.MAX_MP);
 
 	DrawBox(495, GAME_HEIGHT - 145, GAME_WIDTH - 205, GAME_HEIGHT - 55, GetColor(200, 200, 200), TRUE);
-	DrawString(520, GAME_HEIGHT - 130, "てすと", GetColor(0, 0, 0), FALSE);
+	//DrawString(520, GAME_HEIGHT - 130, "てすと", GetColor(0, 0, 0), FALSE);
 
 	DrawBox(280, GAME_HEIGHT - 150 + 10, 480, GAME_HEIGHT - 150 + 40, GetColor(150, 150, 150), TRUE);
-	DrawBox(280, GAME_HEIGHT - 150 + 10, 380, GAME_HEIGHT - 150 + 40, GetColor(255, 0, 0), TRUE);
+	DrawBox(280, GAME_HEIGHT - 150 + 10, 280+ ((PlayChara.HP * 100 / PlayChara.MAX_HP) * 2), GAME_HEIGHT - 150 + 40, GetColor(255, 0, 0), TRUE);
 
 	DrawBox(280, GAME_HEIGHT - 150 + 60, 480, GAME_HEIGHT - 150 + 90, GetColor(150, 150, 150), TRUE);
-	DrawBox(280, GAME_HEIGHT - 150 + 60, 380, GAME_HEIGHT - 150 + 90, GetColor(0, 0, 255), TRUE);
+	DrawBox(280, GAME_HEIGHT - 150 + 60, 280 + ((PlayChara.MP * 100 / PlayChara.MAX_MP) * 2), GAME_HEIGHT - 150 + 90, GetColor(0, 0, 255), TRUE);
 
 	//ログ表示
 	DrawBox(GAME_WIDTH - 350, 50, GAME_WIDTH - 50, 190, GetColor(200, 200, 200), TRUE);
+
+	if (PlayerTurn)
+		DrawString(520, GAME_HEIGHT - 130, "プレイヤーのこうげき！", GetColor(0, 0, 0), FALSE);
+	if(PlayerResult)
+		DrawString(520, GAME_HEIGHT - 110, "敵に１ダメージ！", GetColor(0, 0, 0), FALSE);
+	if (EnemyTurn)
+		DrawString(520, GAME_HEIGHT - 130, "敵のこうげき！", GetColor(0, 0, 0), FALSE);
+	if(EnemyResult)
+		DrawString(520, GAME_HEIGHT - 110, "プレイヤーに１ダメージ！", GetColor(0, 0, 0), FALSE);
+
 
 	//ターン表示 (デバッグ限定予定)
 	if (GAME_DEBUG)
