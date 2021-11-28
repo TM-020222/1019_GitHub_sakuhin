@@ -150,8 +150,11 @@ IMAGE enemyImg1;
 AUDIO sampleBGM;
 AUDIO titleBGM;
 AUDIO playBGM;
+AUDIO battleBGM;
 AUDIO endBGM;
 AUDIO gameoverBGM;
+
+AUDIO sceneEnterSE;
 
 MAP_DATA map1;
 MAP_DATA map2;
@@ -360,9 +363,11 @@ BOOL GameLoad(VOID)
 	//BGMを読み込み
 	if (LoadAudio(&titleBGM, ".\\audio\\街をブラブラする的なBGM.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
 	if (LoadAudio(&playBGM, ".\\audio\\Just_a_really_bad_feeling.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+	if (LoadAudio(&battleBGM, ".\\audio\\Final_Judgement_2.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
 	if (LoadAudio(&endBGM, ".\\audio\\ブルーボトル.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
 	if (LoadAudio(&gameoverBGM, ".\\audio\\拭えない悲しみと迫り来る明日.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
 
+	if (LoadAudio(&sceneEnterSE, ".\\SE\\システム決定音_9_2.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
 
 	//マップデータを読み込み
 	if(LoadCSVMap(
@@ -413,8 +418,11 @@ VOID GameDelete(VOID)
 	DeleteMusicMem(sampleBGM.handle);
 	DeleteMusicMem(titleBGM.handle);
 	DeleteMusicMem(playBGM.handle);
+	DeleteMusicMem(battleBGM.handle);
 	DeleteMusicMem(endBGM.handle);
 	DeleteMusicMem(gameoverBGM.handle);
+
+	DeleteMusicMem(sceneEnterSE.handle);
 
 	//フォントデータを削除
 	FontDelete();
@@ -438,6 +446,7 @@ VOID GameInit(VOID)
 	SetVolumeAudio(&sampleBGM, 100);
 	SetVolumeAudio(&titleBGM, 200);
 	SetVolumeAudio(&playBGM, 200);
+	SetVolumeAudio(&battleBGM, 200);
 	SetVolumeAudio(&endBGM, 200);
 	SetVolumeAudio(&gameoverBGM, 200);
 
@@ -640,6 +649,8 @@ VOID TitleProc(VOID)
 		//シーン切り替え
 		//次のシーンの初期化をここで行うと楽
 
+		//SEを流す
+		PlayAudio(sceneEnterSE);
 		//音楽を止める
 		StopAudio(&titleBGM);
 
@@ -749,6 +760,8 @@ VOID PlayProc(VOID)
 		GameInit();
 		BattleInit();
 
+		//SEを流す
+		PlayAudio(sceneEnterSE);
 		//音楽を止める
 		StopAudio(&playBGM);
 
@@ -1137,14 +1150,19 @@ VOID Battle()
 
 VOID BattleProc()
 {
+	PlayAudio(battleBGM);
+	SetVolumeAudio(&battleBGM, Volumecfg);
+
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
 		//ゲームデータの初期化
 		GameInit();
 		EndInit();
 
+		//SEを流す
+		PlayAudio(sceneEnterSE);
 		//音楽を止める
-		//StopAudio(&playBGM);
+		StopAudio(&battleBGM);
 
 		//エンド画面に切り替え
 		ChangeScene(GAME_SCENE_END);
@@ -1158,8 +1176,10 @@ VOID BattleProc()
 		GameInit();
 		GameOverInit();
 
+		//SEを流す
+		PlayAudio(sceneEnterSE);
 		//音楽を止める
-		//StopAudio(&playBGM);
+		StopAudio(&battleBGM);
 
 		//ゲームオーバー画面に切り替え
 		ChangeScene(GAME_SCENE_GAMEOVER);
@@ -1299,6 +1319,8 @@ VOID EndProc(VOID)
 		GameInit();
 		TitleInit();
 
+		//SEを流す
+		PlayAudio(sceneEnterSE);
 		//音楽を止める
 		StopAudio(&endBGM);
 
@@ -1347,6 +1369,8 @@ VOID GameOverProc(VOID)
 		GameInit();
 		TitleInit();
 
+		//SEを流す
+		PlayAudio(sceneEnterSE);
 		//音楽を止める
 		StopAudio(&gameoverBGM);
 
