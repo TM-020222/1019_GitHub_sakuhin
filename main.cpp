@@ -61,8 +61,12 @@ BOOL canGetItem;
 int MenuStringLeft;
 int MenuStringRight;
 
+//コンフィグ関連
+MENU DrawConfig;
+
 int Volumecfg = 0;
 BOOL OpenVolumecfg;
+
 int turn;
 
 BOOL PlayerTurn;
@@ -476,7 +480,7 @@ VOID PlayInit(VOID)
 {
 	//サンプルプレイヤー初期化
 	samplePlayerImg.speed = 4;
-	samplePlayerImg.x = 10;
+	samplePlayerImg.x = 20;
 	samplePlayerImg.y = 10;
 	//samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
 	//samplePlayerImg.y = MAP1_TATE_MAX * map2.height / 2 - samplePlayerImg.height / 2;
@@ -522,7 +526,18 @@ VOID PlayInit(VOID)
 
 	MenuRight = FALSE;
 
+	//コンフィグを初期化
+
 	OpenVolumecfg = FALSE;
+
+	strcpyDx(DrawConfig.string, "表示数");
+	DrawConfig.Cnt = 1;
+	DrawConfig.can = FALSE;
+	
+
+	samplePlayerImg.screenX = 0;
+	samplePlayerImg.screenY = 0;
+	MapInit(&map2);
 	
 	return;
 }
@@ -780,6 +795,8 @@ VOID PlayProc(VOID)
 	{
 		if(OpenVolumecfg==TRUE)
 		{ OpenVolumecfg = FALSE;}
+		else if(DrawConfig.can==TRUE)
+		{ DrawConfig.can = FALSE;}
 		else if (MenuScreen == TRUE && MenuRight == FALSE)
 		{ MenuScreen = FALSE;}
 		else if (MenuRight == TRUE)
@@ -926,21 +943,63 @@ VOID PlayProc(VOID)
 					MenuStringRight--;
 			}
 
+			//左
 			if (MenuStringLeft < 0)
 			{
-				MenuStringLeft = 2;
+				MenuStringLeft = 3;
 			}
-			else if (MenuStringLeft > 2)
+			else if (MenuStringLeft > 3)
 			{
 				MenuStringLeft = 0;
 			}
-			if (MenuStringRight < 0)
+			if (MenuStringLeft == 0)
 			{
-				MenuStringRight = 2;
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = 2;
+				}
+				else if (MenuStringRight > 2)
+				{
+					MenuStringRight = 0;
+				}
 			}
-			else if (MenuStringRight > 2)
+			if (MenuStringLeft == 1)
 			{
-				MenuStringRight = 0;
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = 2;
+				}
+				else if (MenuStringRight > 2)
+				{
+					MenuStringRight = 0;
+				}
+			}
+			if (MenuStringLeft == 2)
+			{
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = 2;
+				}
+				else if (MenuStringRight > 2)
+				{
+					MenuStringRight = 0;
+				}
+			}
+			if (MenuStringLeft == 3)
+			{
+				//右
+				//試験的にバーで項目数を増やせるように
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = DrawConfig.Cnt - 1;
+				}
+				else if (MenuStringRight > DrawConfig.Cnt - 1)
+				{
+					MenuStringRight = 0;
+				}
 			}
 
 			//決定ボタンを押したとき
@@ -967,6 +1026,19 @@ VOID PlayProc(VOID)
 								OpenVolumecfg = FALSE;
 						}
 					}
+					//四行目
+					if (MenuStringLeft == 3)
+					{
+						//一行目
+						if (MenuStringRight == 0)
+						{
+							//決定を押したときにBOOL型を反転
+							if (DrawConfig.can == FALSE)
+								DrawConfig.can = TRUE;
+							else
+								DrawConfig.can = FALSE;
+						}
+					}
 
 				}
 			}
@@ -986,6 +1058,23 @@ VOID PlayProc(VOID)
 					Volumecfg = 0;
 				else if (Volumecfg > 255)
 					Volumecfg = 255;
+			}
+
+			if (DrawConfig.can == TRUE)
+			{
+				if (KeyClick(KEY_INPUT_LEFT))
+				{
+					DrawConfig.Cnt--;
+				}
+				else if (KeyClick(KEY_INPUT_RIGHT))
+				{
+					DrawConfig.Cnt++;
+				}
+
+				if (DrawConfig.Cnt < 0)
+					DrawConfig.Cnt = 0;
+				else if (DrawConfig.Cnt > 255)
+					DrawConfig.Cnt = 255;
 			}
 
 		}
@@ -1060,6 +1149,12 @@ VOID PlayDraw(VOID)
 		else
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(200, 200, 200), FALSE);
 
+		if (MenuStringLeft != 3)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "てすと4", GetColor(100, 100, 100), FALSE);
+		else
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "てすと4", GetColor(200, 200, 200), FALSE);
+
+
 		//右ブロック
 		if (MenuRight == FALSE)
 		{
@@ -1113,14 +1208,16 @@ VOID PlayDraw(VOID)
 				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと10", GetColor(100, 100, 100), FALSE);
 
 			if (MenuStringRight == 1 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと11", GetColor(200, 200, 200), FALSE);
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "マップ拡大率", GetColor(200, 200, 200), FALSE);
 			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと11", GetColor(100, 100, 100), FALSE);
+				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "マップ拡大率", GetColor(100, 100, 100), FALSE);
 
 			if (MenuStringRight == 2 && MenuRight == TRUE)
 				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "音量", GetColor(200, 200, 200), FALSE);
 			else
 				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "音量", GetColor(100, 100, 100), FALSE);
+
+			
 
 			//音量調節のバー
 			if (OpenVolumecfg == TRUE)
@@ -1128,6 +1225,25 @@ VOID PlayDraw(VOID)
 				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 80, GetColor(0, 0, 0), "%3d / 255", Volumecfg);
 				DrawBox(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GAME_WIDTH / 3 + 275, GAME_HEIGHT / 6 + 120, GetColor(0, 0, 0), TRUE);
 				DrawBox(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GAME_WIDTH / 3 + 20+Volumecfg, GAME_HEIGHT / 6 + 120, GetColor(0, 0, 255), TRUE);
+			}
+
+		}
+
+		if (MenuStringLeft == 3)
+		{
+			for (int i = 0; i < DrawConfig.Cnt; i++)
+			{
+				if (MenuStringRight == i && MenuRight == TRUE)
+					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), DrawConfig.string, GetColor(200, 200, 200), FALSE);
+				else
+					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), DrawConfig.string, GetColor(100, 100, 100), FALSE);
+			}
+
+			if (DrawConfig.can == TRUE)
+			{
+				DrawFormatString(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 20, GetColor(0, 0, 0), "%3d / 255", DrawConfig.Cnt);
+				DrawBox(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 40, GAME_WIDTH / 3 + 475, GAME_HEIGHT / 6 + 60, GetColor(0, 0, 0), TRUE);
+				DrawBox(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 40, GAME_WIDTH / 3 + 220 + DrawConfig.Cnt, GAME_HEIGHT / 6 + 60, GetColor(0, 0, 255), TRUE);
 			}
 		}
 
@@ -1285,9 +1401,11 @@ VOID BattleDraw()
 	{
 		DrawFormatString(20, 40, GetColor(0, 0, 0), "たーん:%d", turn);
 
-		DrawFormatString(20, 60, GetColor(0, 0, 0), "%d,%s,%d,%d,%d", Battleenemy[0].No, Battleenemy[0].Name, Battleenemy[0].HP, Battleenemy[0].ATK, Battleenemy[0].DEF);
+		DrawFormatString(20, 60, GetColor(0, 0, 0), "%d,%s,%d,%d,%d,%d", Battleenemy[0].No, Battleenemy[0].Name, Battleenemy[0].HP, Battleenemy[0].MP, Battleenemy[0].ATK, Battleenemy[0].DEF);
+		
+		DrawFormatString(20, 80, GetColor(0, 0, 0), "%d,%s,%d,%d,%d,%d", PlayChara.No, PlayChara.Name, PlayChara.HP, PlayChara.MP, PlayChara.ATK, PlayChara.DEF);
 
-		DrawFormatString(20, 80, GetColor(0, 0, 0), "Player:%d/%d\nEnemy:%d/%d", PlayerTurn, PlayerResult, EnemyTurn, EnemyResult);
+		DrawFormatString(20, 100, GetColor(0, 0, 0), "Player:%d/%d\nEnemy:%d/%d", PlayerTurn, PlayerResult, EnemyTurn, EnemyResult);
 	}
 	if (GAME_DEBUG)DrawString(0, 0, "戦闘画面", GetColor(0, 0, 0));
 

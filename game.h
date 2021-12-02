@@ -121,6 +121,15 @@ struct EVENT
 	RECT coll;				//当たり判定
 };
 
+struct MENU
+{
+	char string[255];
+
+	int Cnt = 0;
+
+	BOOL can = FALSE;
+};
+
 //########## 外部のグローバル変数 ##########
 extern DIVIMAGE samplePlayerImg;
 

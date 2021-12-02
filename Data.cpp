@@ -767,3 +767,17 @@ VOID MapMove(MAP_DATA* map)
 
 	return;
 }
+
+VOID MapInit(MAP_DATA* map)
+{
+	for (int j = 0; j < MAP1_TATE_MAX; j++)
+	{
+		for (int i = 0; i < MAP1_YOKO_MAX; i++)
+		{
+			map->x[i][j] = (j + 0) * map->width;
+			map->y[i][j] = (i + 0) * map->height;
+		}
+	}
+
+	return;
+}

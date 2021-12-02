@@ -172,3 +172,4 @@ extern VOID DrawMap(MAP_DATA map);
 extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map);
 extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DATA map);
 extern VOID MapMove(MAP_DATA* map);
+extern VOID MapInit(MAP_DATA* map);
