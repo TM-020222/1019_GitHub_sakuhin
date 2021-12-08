@@ -176,6 +176,8 @@ EVENT GetStone;
 
 EVENT Goal;
 
+EVENT CreateItems;
+
 //ロゴなどの画像
 IMAGE TitleImg;
 IMAGE EndImg;
@@ -491,15 +493,7 @@ VOID PlayInit(VOID)
 	//CreateEventMultiMass(9, 1, 11, 2, &sampleevent, map2);
 
 	//イベントの作成
-	CreateEventMass(3, 9, &CreatePickaxe, map2);
-	CreateEventMass(16, 9, &CreateAxe, map2);
-	CreateEventMass(16, 4, &CreateKey, map2);
-
-	CreateEventMultiMass(8, 15, 12, 18, &GetItem, map2);
-	CreateEventMultiMass(2, 16, 4, 18, &GetWood, map2);
-	CreateEventMultiMass(16, 16, 19, 18, &GetStone, map2);
-
-	CreateEventMultiMass(9, 1, 11, 2, &Goal, map2);
+	SetEventUpdate();
 
 	//時間制限
 	GameTimeLimit = GameTimeLimitMax;
@@ -517,6 +511,7 @@ VOID PlayInit(VOID)
 	ItemEventInit(&CreatePickaxe, 1, 2, 1);
 	ItemEventInit(&CreateAxe, 1, 3, 1);
 	ItemEventInit(&CreateKey, 10, 10, 1);
+	ItemEventInit(&CreateItems, 0, 0, NULL);
 
 	//メニューを開いていない
 	MenuScreen = FALSE;
@@ -530,6 +525,7 @@ VOID PlayInit(VOID)
 
 	OpenVolumecfg = FALSE;
 
+	//項目増やすテストのやつの初期化
 	strcpyDx(DrawConfig.string, "表示数");
 	DrawConfig.Cnt = 1;
 	DrawConfig.can = FALSE;
@@ -599,6 +595,7 @@ VOID SetEventUpdate()
 		CreateEventMass(3, 9, &CreatePickaxe, map2);
 		CreateEventMass(16, 9, &CreateAxe, map2);
 		CreateEventMass(16, 4, &CreateKey, map2);
+		CreateEventMass(41, 29, &CreateItems, map2);
 
 		CreateEventMultiMass(8, 15, 12, 18, &GetItem, map2);
 		CreateEventMultiMass(2, 16, 4, 18, &GetWood, map2);
@@ -790,7 +787,7 @@ VOID PlayProc(VOID)
 
 
 	
-
+	//Xを押したときの関数反転
 	if (KeyClick(KEY_INPUT_X))
 	{
 		if(OpenVolumecfg==TRUE)
@@ -805,6 +802,7 @@ VOID PlayProc(VOID)
 		{ MenuScreen = TRUE;}
 	}
 
+	//メニューを開いていない(通常時)時
 	if (MenuScreen == FALSE)
 	{
 		//マップの当たり判定
@@ -918,6 +916,7 @@ VOID PlayProc(VOID)
 			ChangeScene(GAME_SCENE_GAMEOVER);
 		}
 	}
+	//メニューを開いているとき
 	else if(MenuScreen==TRUE)
 	{
 		//メニューの操作
@@ -944,26 +943,32 @@ VOID PlayProc(VOID)
 			}
 
 			//左
+			//左の項目を上限を超えて上に行ったとき(のちにdefine化)
 			if (MenuStringLeft < 0)
 			{
 				MenuStringLeft = 3;
 			}
+			//左の項目を上限を超えて下に行ったとき
 			else if (MenuStringLeft > 3)
 			{
 				MenuStringLeft = 0;
 			}
+			//左の一項目目の時
 			if (MenuStringLeft == 0)
 			{
 				//右
+				//↑上限超えたら(個別にdefine用意推奨)
 				if (MenuStringRight < 0)
 				{
 					MenuStringRight = 2;
 				}
+				//↓上限超えたら
 				else if (MenuStringRight > 2)
 				{
 					MenuStringRight = 0;
 				}
 			}
+			//左の二項目目の時
 			if (MenuStringLeft == 1)
 			{
 				//右
@@ -976,6 +981,7 @@ VOID PlayProc(VOID)
 					MenuStringRight = 0;
 				}
 			}
+			//左の三項目目の時
 			if (MenuStringLeft == 2)
 			{
 				//右
@@ -1005,10 +1011,13 @@ VOID PlayProc(VOID)
 			//決定ボタンを押したとき
 			if (KeyClick(KEY_INPUT_Z))
 			{
+				//左項目にいるとき
 				if (MenuRight == FALSE)
 				{
+					//右に移動
 					MenuRight = TRUE;
 				}
+				//右項目にいるとき
 				else
 				{
 
@@ -1043,6 +1052,7 @@ VOID PlayProc(VOID)
 				}
 			}
 
+			//音量調整
 			if (OpenVolumecfg == TRUE)
 			{
 				if (KeyDown(KEY_INPUT_LEFT))
@@ -1060,6 +1070,7 @@ VOID PlayProc(VOID)
 					Volumecfg = 255;
 			}
 
+			//項目増やすテスト
 			if (DrawConfig.can == TRUE)
 			{
 				if (KeyClick(KEY_INPUT_LEFT))
