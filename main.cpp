@@ -62,6 +62,8 @@ int MenuStringLeft;
 int MenuStringRight;
 
 //コンフィグ関連
+MENU test[2];
+
 MENU DrawConfig;
 
 int Volumecfg = 0;
@@ -529,6 +531,15 @@ VOID PlayInit(VOID)
 	strcpyDx(DrawConfig.string, "表示数");
 	DrawConfig.Cnt = 1;
 	DrawConfig.can = FALSE;
+
+	for (int i = 0; i < 3; i++)
+	{
+		test[i].Cnt = 0;
+		test[i].can = FALSE;
+	}
+	strcpyDx(test[0].string, "関数てすと1");
+	strcpyDx(test[1].string, "関数てすと2");
+	strcpyDx(test[2].string, "関数てすと3");
 	
 
 	samplePlayerImg.screenX = 0;
@@ -812,6 +823,17 @@ VOID PlayProc(VOID)
 			DIVIMAGE dummy2 = samplePlayerImg;	//当たり判定のダミー
 			if (KeyDown(KEY_INPUT_UP)) { muki = muki_ue; dummy.y -= samplePlayerImg.speed; }
 			else if (KeyDown(KEY_INPUT_DOWN)) { muki = muki_shita; dummy.y += samplePlayerImg.speed; }
+
+			CollUpdateDivImage(&dummy);	//当たり判定の更新
+			CollMapUpdate(&map2);		//マップの当たり判定更新
+
+			if (CollMap(dummy.coll, map2) == FALSE)
+			{
+				samplePlayerImg.y = dummy.y;	//ダミーの情報を戻す
+			}
+
+			dummy = samplePlayerImg;	//当たり判定のダミー
+
 			if (KeyDown(KEY_INPUT_LEFT)) { muki = muki_hidari; dummy.x -= samplePlayerImg.speed; }
 			else if (KeyDown(KEY_INPUT_RIGHT)) { muki = muki_migi; dummy.x += samplePlayerImg.speed; }
 
@@ -820,7 +842,15 @@ VOID PlayProc(VOID)
 
 			if (CollMap(dummy.coll, map2) == FALSE)
 			{
-				samplePlayerImg = dummy;	//ダミーの情報を戻す
+				samplePlayerImg.x = dummy.x;	//ダミーの情報を戻す
+			}
+			else
+			{
+				if (samplePlayerImg.y != dummy2.y)
+				{
+					if (samplePlayerImg.y < dummy2.y){muki = muki_ue;}
+					else{muki = muki_shita;}
+				}
 			}
 			//画面端にいった場合
 			/*if (samplePlayerImg.y < map2.y[0][0]) { samplePlayerImg.y = map2.y[0][0]; }	//未確認
@@ -900,6 +930,16 @@ VOID PlayProc(VOID)
 			GetItemSystem(&GetItem, NULL);
 			GetItemSystem(&GetWood, &CreateAxe);
 			GetItemSystem(&GetStone, &CreatePickaxe);
+
+			//アイテムを追加で項目増やすサンプルイベント
+			if (CheckCollRectToRect(samplePlayerImg.coll, CreateItems.coll))
+			{
+				if (KeyClick(KEY_INPUT_Z))
+				{
+					//描画数を増やす
+					DrawConfig.Cnt++;
+				}
+			}
 		}
 
 		GameTimeLimit -= fps.DeltaTime;
@@ -1114,8 +1154,15 @@ VOID PlayDraw(VOID)
 
 	DrawHitBox(&Goal);
 
+	//サンプル
+	DrawHitBox(&CreateItems);
+
+
 	//数値を出したいとき
-	DrawFormatStringToHandle(900, GAME_HEIGHT - 100, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f", GameTimeLimit);
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
+	DrawBox(930, GAME_HEIGHT - 90, GAME_WIDTH, GAME_HEIGHT, GetColor(50, 50, 50), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+	DrawFormatStringToHandle(950, GAME_HEIGHT - 75, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f", GameTimeLimit);
 
 	DrawFormatStringToHandle(650, 40, GetColor(0, 0, 0), sampleFont1.handle, "ピッケル:%d\n斧　　　:%d\n鍵　　　:%d\n\n木:%d　石:%d",CreatePickaxe.Cnt,CreateAxe.Cnt,CreateKey.Cnt,ItemWood,ItemStone);
 
@@ -1177,38 +1224,25 @@ VOID PlayDraw(VOID)
 		//右側の文字 汚いので要修正
 		if (MenuStringLeft == 0)
 		{
-			if (MenuStringRight == 0 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと4", GetColor(200, 200, 200), FALSE);
-			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと4", GetColor(100, 100, 100), FALSE);
-
-			if (MenuStringRight == 1 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと5", GetColor(200, 200, 200), FALSE);
-			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと5", GetColor(100, 100, 100), FALSE);
-
-			if (MenuStringRight == 2 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと6", GetColor(200, 200, 200), FALSE);
-			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと6", GetColor(100, 100, 100), FALSE);
-
+			for (int i = 0; i < 3; i++)
+			{
+				//for文で表示させるテスト
+				if (MenuStringRight == i && MenuRight == TRUE)
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(200, 200, 200), "てすと%d", i + 4);
+				else
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(100, 100, 100), "てすと%d", i + 4);
+			}
 		}
 		if (MenuStringLeft == 1)
 		{
-			if (MenuStringRight == 0 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと7", GetColor(200, 200, 200), FALSE);
-			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと7", GetColor(100, 100, 100), FALSE);
-
-			if (MenuStringRight == 1 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと8", GetColor(200, 200, 200), FALSE);
-			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "てすと8", GetColor(100, 100, 100), FALSE);
-
-			if (MenuStringRight == 2 && MenuRight == TRUE)
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと9", GetColor(200, 200, 200), FALSE);
-			else
-				DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "てすと9", GetColor(100, 100, 100), FALSE);
+			for (int i = 0; i < 3; i++)
+			{
+				//配列の関数を表示させるテスト
+				if (MenuStringRight == i && MenuRight == TRUE)
+					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), test[i].string, GetColor(200, 200, 200), FALSE);
+				else
+					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20),test[i].string, GetColor(100, 100, 100), FALSE);
+			}
 
 		}
 		if (MenuStringLeft == 2)
