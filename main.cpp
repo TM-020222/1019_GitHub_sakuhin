@@ -838,13 +838,13 @@ VOID PlayProc(VOID)
 			}*/
 
 			//プレイヤーの幅の考慮無し,要修正
-			if (samplePlayerImg.x >= GAME_WIDTH / 2 && map2.x[0][0] <= 0
+			if (samplePlayerImg.x > GAME_WIDTH / 2 && map2.x[0][0] <= 0
 				&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_WIDTH && dummy2.x != samplePlayerImg.x)
 			{
 				samplePlayerImg.screenX = samplePlayerImg.speed;
 				samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
 			}
-			else if (samplePlayerImg.x <= GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
+			else if (samplePlayerImg.x < GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
 				&& map2.x[0][0] < 0 && dummy2.x != samplePlayerImg.x)
 			{
 				samplePlayerImg.screenX = -samplePlayerImg.speed;
@@ -855,13 +855,13 @@ VOID PlayProc(VOID)
 				samplePlayerImg.screenX = 0;
 			}
 
-			if (samplePlayerImg.y >= GAME_HEIGHT / 2 && map2.y[0][0] <= 0
+			if (samplePlayerImg.y > GAME_HEIGHT / 2 && map2.y[0][0] <= 0
 				&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_HEIGHT && dummy2.y != samplePlayerImg.y)
 			{
 				samplePlayerImg.screenY = samplePlayerImg.speed;
 				samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
 			}
-			else if (samplePlayerImg.y <= GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
+			else if (samplePlayerImg.y < GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
 				&& map2.y[0][0] < 0 && dummy2.y != samplePlayerImg.y)
 			{
 				samplePlayerImg.screenY = -samplePlayerImg.speed;
