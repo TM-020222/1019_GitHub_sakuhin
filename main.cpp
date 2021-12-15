@@ -8,6 +8,7 @@
 #include "Data.h"		//データの処理
 
 //独自のマクロ定義
+#define MAIN_ITEM_KIND	3
 
 //独自の列挙型の定義
 enum MUKI
@@ -63,6 +64,13 @@ int MenuStringRight;
 
 //コンフィグ関連
 MENU test[2];
+
+//メニュー画面のサンプル
+MENU sampleGetItemMenu[4];
+int sampleGetItemMenuCnt;
+
+MENU GetMainItemMenu[MAIN_ITEM_KIND];
+int GetMainItemCnt;
 
 MENU DrawConfig;
 
@@ -179,6 +187,9 @@ EVENT GetStone;
 EVENT Goal;
 
 EVENT CreateItems;
+EVENT sampleGetItem[4];
+
+EVENT GetMainItem[MAIN_ITEM_KIND];	//石、木材、金属
 
 //ロゴなどの画像
 IMAGE TitleImg;
@@ -483,7 +494,7 @@ VOID TitleInit(VOID)
 VOID PlayInit(VOID)
 {
 	//サンプルプレイヤー初期化
-	samplePlayerImg.speed = 4;
+	samplePlayerImg.speed = 9;
 	samplePlayerImg.x = 20;
 	samplePlayerImg.y = 10;
 	//samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
@@ -515,6 +526,16 @@ VOID PlayInit(VOID)
 	ItemEventInit(&CreateKey, 10, 10, 1);
 	ItemEventInit(&CreateItems, 0, 0, NULL);
 
+	strcpyDx(sampleGetItem[0].string, "アイテムてすと1");
+	strcpyDx(sampleGetItem[1].string, "アイテムてすと2");
+	strcpyDx(sampleGetItem[2].string, "アイテムてすと3");
+	strcpyDx(sampleGetItem[3].string, "アイテムてすと4");
+
+	for (int i = 0; i < 4; i++)
+	{
+		sampleGetItemMenu[i].Cnt = 0;
+	}
+
 	//メニューを開いていない
 	MenuScreen = FALSE;
 
@@ -540,7 +561,23 @@ VOID PlayInit(VOID)
 	strcpyDx(test[0].string, "関数てすと1");
 	strcpyDx(test[1].string, "関数てすと2");
 	strcpyDx(test[2].string, "関数てすと3");
-	
+
+	//イベントの初期化
+	for (int i = 0; i < MAIN_ITEM_KIND; i++)
+	{
+		GetMainItem[i].Cnt = 0;
+		GetMainItem[i].can = FALSE;
+
+	}
+
+	//イベントの文字列コピー
+	strcpyDx(GetMainItem[0].string, "石");
+	strcpyDx(GetMainItem[1].string, "木材");
+	strcpyDx(GetMainItem[2].string, "金属");
+
+	//取得したアイテムの種類の個数の初期化
+	sampleGetItemMenuCnt = 0;
+	GetMainItemCnt = 0;
 
 	samplePlayerImg.screenX = 0;
 	samplePlayerImg.screenY = 0;
@@ -613,6 +650,16 @@ VOID SetEventUpdate()
 		CreateEventMultiMass(16, 16, 19, 18, &GetStone, map2);
 
 		CreateEventMultiMass(9, 1, 11, 2, &Goal, map2);
+
+		for (int i = 0; i < 4; i++)
+		{
+			CreateEventMass(15 + 3 * i, 38 + 3 * i, &sampleGetItem[i], map2);
+		}
+
+		CreateEventMultiMass(41, 8, 43, 9, &GetMainItem[0], map2);
+		CreateEventMultiMass(46, 8, 49, 9, &GetMainItem[1], map2);
+		CreateEventMultiMass(53, 9, 55, 10, &GetMainItem[2], map2);
+
 	}
 }
 
@@ -827,9 +874,27 @@ VOID PlayProc(VOID)
 			CollUpdateDivImage(&dummy);	//当たり判定の更新
 			CollMapUpdate(&map2);		//マップの当たり判定更新
 
-			if (CollMap(dummy.coll, map2) == FALSE)
+			for(int i=0;i<samplePlayerImg.speed;i++)
 			{
-				samplePlayerImg.y = dummy.y;	//ダミーの情報を戻す
+				//当たっていないのなら
+				if (CollMap(dummy.coll, map2) == FALSE)
+				{
+					samplePlayerImg.y = dummy.y;	//ダミーの情報を戻す
+					break;
+				}
+				//dummyが基の座標よりも上なら
+				else if(dummy.y < dummy2.y)
+				{
+					//下にずらす
+					dummy.y++;
+				}
+				//下なら
+				else if (dummy.y > dummy2.y)
+				{
+					//上にずらす
+					dummy.y--;
+				}
+				CollUpdateDivImage(&dummy);	//当たり判定の更新
 			}
 
 			dummy = samplePlayerImg;	//当たり判定のダミー
@@ -840,17 +905,37 @@ VOID PlayProc(VOID)
 			CollUpdateDivImage(&dummy);	//当たり判定の更新
 			CollMapUpdate(&map2);		//マップの当たり判定更新
 
-			if (CollMap(dummy.coll, map2) == FALSE)
+			for (int i = 0; i < samplePlayerImg.speed; i++)
 			{
-				samplePlayerImg.x = dummy.x;	//ダミーの情報を戻す
-			}
-			else
-			{
-				if (samplePlayerImg.y != dummy2.y)
+				if (CollMap(dummy.coll, map2) == TRUE)
 				{
-					if (samplePlayerImg.y < dummy2.y){muki = muki_ue;}
-					else{muki = muki_shita;}
+					//当たっていた時、dummy2とplayerのy位置が違うなら向き修正
+					if (samplePlayerImg.y != dummy2.y)
+					{
+						if (samplePlayerImg.y < dummy2.y) { muki = muki_ue; }
+						else { muki = muki_shita; }
+					}
 				}
+				//当たっていないなら
+				else if (CollMap(dummy.coll, map2) == FALSE)
+				{
+					samplePlayerImg.x = dummy.x;	//ダミーの情報を戻す
+					break;
+				}
+
+				//dummyが基の座標よりも左なら
+				if (dummy.x < dummy2.x)
+				{
+					//右にずらす
+					dummy.x++;
+				}
+				//右なら
+				else if (dummy.x > dummy2.x)
+				{
+					//左にずらす
+					dummy.x--;
+				}
+				CollUpdateDivImage(&dummy);	//当たり判定の更新
 			}
 			//画面端にいった場合
 			/*if (samplePlayerImg.y < map2.y[0][0]) { samplePlayerImg.y = map2.y[0][0]; }	//未確認
@@ -865,17 +950,20 @@ VOID PlayProc(VOID)
 				samplePlayerImg.x = map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
 			}*/
 
+			//移動した後のやつ
+			DIVIMAGE dummy3 = samplePlayerImg;
+
 			//プレイヤーの幅の考慮無し,要修正
-			if (samplePlayerImg.x > GAME_WIDTH / 2 && map2.x[0][0] <= 0
+			if (samplePlayerImg.x > GAME_WIDTH / 2
 				&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_WIDTH && dummy2.x != samplePlayerImg.x)
 			{
-				samplePlayerImg.screenX = samplePlayerImg.speed;
+				samplePlayerImg.screenX = samplePlayerImg.x - dummy2.x;
 				samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
 			}
-			else if (samplePlayerImg.x < GAME_WIDTH / 2 && map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_WIDTH
+			else if (samplePlayerImg.x < GAME_WIDTH / 2
 				&& map2.x[0][0] < 0 && dummy2.x != samplePlayerImg.x)
 			{
-				samplePlayerImg.screenX = -samplePlayerImg.speed;
+				samplePlayerImg.screenX = samplePlayerImg.x - dummy2.x;
 				samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
 			}
 			else
@@ -883,16 +971,16 @@ VOID PlayProc(VOID)
 				samplePlayerImg.screenX = 0;
 			}
 
-			if (samplePlayerImg.y > GAME_HEIGHT / 2 && map2.y[0][0] <= 0
+			if (samplePlayerImg.y > GAME_HEIGHT / 2
 				&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_HEIGHT && dummy2.y != samplePlayerImg.y)
 			{
-				samplePlayerImg.screenY = samplePlayerImg.speed;
+				samplePlayerImg.screenY = samplePlayerImg.y - dummy2.y;
 				samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
 			}
-			else if (samplePlayerImg.y < GAME_HEIGHT / 2 && map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] >= GAME_HEIGHT
+			else if (samplePlayerImg.y < GAME_HEIGHT / 2
 				&& map2.y[0][0] < 0 && dummy2.y != samplePlayerImg.y)
 			{
-				samplePlayerImg.screenY = -samplePlayerImg.speed;
+				samplePlayerImg.screenY = samplePlayerImg.y - dummy2.y;
 				samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
 			}
 			else
@@ -940,6 +1028,70 @@ VOID PlayProc(VOID)
 					DrawConfig.Cnt++;
 				}
 			}
+
+			//イベントを配列で管理するサンプル
+			for (int i = 0; i < 4; i++)
+			{
+				if (CheckCollRectToRect(samplePlayerImg.coll, sampleGetItem[i].coll))
+				{
+					if (KeyClick(KEY_INPUT_Z))
+					{
+						for (int j = 0; j < 4; j++)
+						{
+							if (!strcmpDx(sampleGetItemMenu[j].string, sampleGetItem[i].string))
+							{
+								sampleGetItemMenu[j].Cnt++;
+								break;
+							}
+							else if (j == 3)
+							{
+								//文字列コピー
+								strcpyDx(sampleGetItemMenu[sampleGetItemMenuCnt].string, sampleGetItem[i].string);
+								sampleGetItemMenu[sampleGetItemMenuCnt].Cnt++;
+								sampleGetItemMenuCnt++;
+								break;
+							}
+						}
+
+						
+					}
+				}
+			}
+
+			//素材アイテム入手
+			for (int i = 0; i < MAIN_ITEM_KIND; i++)
+			{
+				//当たり判定
+				if (CheckCollRectToRect(samplePlayerImg.coll, GetMainItem[i].coll))
+				{
+					//Zを押したら
+					if (KeyClick(KEY_INPUT_Z))
+					{
+						for (int j = 0; j < MAIN_ITEM_KIND; j++)
+						{
+							//探査(strcmpDxの仕様良くわかっていない、とりあえず動作したのでこのまま)
+							if (!strcmpDx(GetMainItemMenu[j].string, GetMainItem[i].string))
+							{
+								GetMainItemMenu[j].Cnt++;
+								break;
+							}
+							//存在してなく、最後まで行った場合
+							else if (j == MAIN_ITEM_KIND - 1)
+							{
+								//文字列コピー
+								strcpyDx(GetMainItemMenu[GetMainItemCnt].string, GetMainItem[i].string);
+								GetMainItemMenu[GetMainItemCnt].Cnt++;
+								GetMainItemCnt++;
+								break;
+							}
+						}
+
+						
+					}
+				}
+			}
+
+
 		}
 
 		GameTimeLimit -= fps.DeltaTime;
@@ -986,10 +1138,10 @@ VOID PlayProc(VOID)
 			//左の項目を上限を超えて上に行ったとき(のちにdefine化)
 			if (MenuStringLeft < 0)
 			{
-				MenuStringLeft = 3;
+				MenuStringLeft = 5;
 			}
 			//左の項目を上限を超えて下に行ったとき
-			else if (MenuStringLeft > 3)
+			else if (MenuStringLeft > 5)
 			{
 				MenuStringLeft = 0;
 			}
@@ -1047,6 +1199,32 @@ VOID PlayProc(VOID)
 					MenuStringRight = 0;
 				}
 			}
+			//左の五項目目の時
+			if (MenuStringLeft == 4)
+			{
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = sampleGetItemMenuCnt-1;
+				}
+				else if (MenuStringRight > sampleGetItemMenuCnt-1)
+				{
+					MenuStringRight = 0;
+				}
+			}
+			//左の六項目目の時
+			if (MenuStringLeft == 5)
+			{
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = GetMainItemCnt-1;
+				}
+				else if (MenuStringRight > GetMainItemCnt-1)
+				{
+					MenuStringRight = 0;
+				}
+			}
 
 			//決定ボタンを押したとき
 			if (KeyClick(KEY_INPUT_Z))
@@ -1088,7 +1266,6 @@ VOID PlayProc(VOID)
 								DrawConfig.can = FALSE;
 						}
 					}
-
 				}
 			}
 
@@ -1156,6 +1333,10 @@ VOID PlayDraw(VOID)
 
 	//サンプル
 	DrawHitBox(&CreateItems);
+	for (int i = 0; i < 4; i++) { DrawHitBox(&sampleGetItem[i]); }
+
+	for (int i = 0; i < MAIN_ITEM_KIND; i++) { DrawHitBox(&GetMainItem[i]); }
+
 
 
 	//数値を出したいとき
@@ -1211,6 +1392,16 @@ VOID PlayDraw(VOID)
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "てすと4", GetColor(100, 100, 100), FALSE);
 		else
 			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "てすと4", GetColor(200, 200, 200), FALSE);
+
+		if (MenuStringLeft != 4)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 100, "てすと5", GetColor(100, 100, 100), FALSE);
+		else
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 100, "てすと5", GetColor(200, 200, 200), FALSE);
+
+		if (MenuStringLeft != 5)
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 120, "素材アイテム", GetColor(100, 100, 100), FALSE);
+		else
+			DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 120, "素材アイテム", GetColor(200, 200, 200), FALSE);
 
 
 		//右ブロック
@@ -1289,6 +1480,29 @@ VOID PlayDraw(VOID)
 				DrawFormatString(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 20, GetColor(0, 0, 0), "%3d / 255", DrawConfig.Cnt);
 				DrawBox(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 40, GAME_WIDTH / 3 + 475, GAME_HEIGHT / 6 + 60, GetColor(0, 0, 0), TRUE);
 				DrawBox(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 40, GAME_WIDTH / 3 + 220 + DrawConfig.Cnt, GAME_HEIGHT / 6 + 60, GetColor(0, 0, 255), TRUE);
+			}
+		}
+		if (MenuStringLeft == 4)
+		{
+			//入手した順にアイテムを追加していくサンプル
+			for (int i = 0; i < sampleGetItemMenuCnt; i++)
+			{
+				if (MenuStringRight == i && MenuRight == TRUE)
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20),GetColor(200,200,200), "%16s x%d",sampleGetItemMenu[i].string,sampleGetItemMenu[i].Cnt);
+				else
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(100, 100, 100), "%16s x%d", sampleGetItemMenu[i].string, sampleGetItemMenu[i].Cnt);
+			}
+		}
+		//素材アイテム表示
+		if (MenuStringLeft == 5)
+		{
+			//入手した順にアイテムを追加していく
+			for (int i = 0; i < GetMainItemCnt; i++)
+			{
+				if (MenuStringRight == i && MenuRight == TRUE)
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20),GetColor(200,200,200), "%-14s x%d",GetMainItemMenu[i].string,GetMainItemMenu[i].Cnt);
+				else
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(100, 100, 100), "%-14s x%d", GetMainItemMenu[i].string, GetMainItemMenu[i].Cnt);
 			}
 		}
 

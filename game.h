@@ -107,6 +107,8 @@ struct AUDIO
 //イベントの構造体
 struct EVENT
 {
+	char string[255];
+
 	int x = -1;				//X座標
 	int y = -1;				//Y座標
 

@@ -748,8 +748,8 @@ VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DAT
 
 	events->coll.top = map.y[y1][x1] - 1;
 	events->coll.left = map.x[y1][x1] - 1;
-	events->coll.bottom = map.y[y2][x2] + 1;
-	events->coll.right = map.x[y2][x2] + 1;
+	events->coll.bottom = map.y[y2+1][x2+1] + 1;
+	events->coll.right = map.x[y2+1][x2+1] + 1;
 
 	return;
 }
