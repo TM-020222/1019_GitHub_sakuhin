@@ -34,6 +34,16 @@ enum GAME_SCENE {
 	GAME_SCENE_CHANGE
 };	//ゲームのシーン
 
+enum GAME_MENU
+{
+	GAME_MENU_TEST1,
+	GAME_MENU_TEST2,
+	GAME_MENU_TEST3,
+	GAME_MENU_TEST4,
+	GAME_MENU_TEST5,
+	GAME_MENU_MATERIAL
+};	//ゲームのメニュー画面
+
 //画像の構造体
 struct IMAGE
 {
@@ -117,6 +127,7 @@ struct EVENT
 
 	int Wood = -1;
 	int Stone = -1;
+	int Metal = -1;
 
 	BOOL can = FALSE;				//実行できるか
 
@@ -126,6 +137,10 @@ struct EVENT
 struct MENU
 {
 	char string[255];
+
+	int Wood = -1;
+	int Stone = -1;
+	int Metal = -1;
 
 	int Cnt = 0;
 
