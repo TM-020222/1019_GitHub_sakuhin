@@ -70,11 +70,8 @@
 //#define MAP1_YOKO_MAX			20	//マップの横サイズ
 //#define MAP1_TATE_MAX			20	//マップの縦サイズ
 
-#define MAP1_YOKO_DIV			60	//マップの横分割数
-#define MAP1_TATE_DIV			60	//マップの縦分割数
-
-//#define MAP1_YOKO_DIV			60	//マップの横分割数
-//#define MAP1_TATE_DIV			60	//マップの縦分割数
+#define MAP1_TATE_DIV			60	//マップチップの縦分割数
+#define MAP1_YOKO_DIV			60	//マップチップの横分割数
 
 #define MAP_MOVE_ID				56	//通れるマップID
 #define MAP_STOP_ID				57	//通れないマップID

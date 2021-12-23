@@ -888,7 +888,7 @@ VOID PlayProc(VOID)
 
 
 	
-	//Xを押したときの関数反転
+	//Xを押したときの関数反転 + a
 	if (KeyClick(KEY_INPUT_X))
 	{
 		if(OpenVolumecfg==TRUE)
@@ -899,11 +899,13 @@ VOID PlayProc(VOID)
 		{
 			MenuScreen = FALSE;
 			MenuScreenInventory = FALSE;
+			MenuStringLeft = 0;
 		}
 		else if (MenuScreen == TRUE && MenuRight == FALSE && MenuScreenCrafting==TRUE)
 		{
 			MenuScreen = FALSE;
 			MenuScreenCrafting = FALSE;
+			MenuStringLeft = 0;
 		}
 		else if (MenuRight == TRUE)
 		{ MenuRight = FALSE;}
@@ -1009,7 +1011,7 @@ VOID PlayProc(VOID)
 
 			//プレイヤーの幅の考慮無し,要修正
 			if (samplePlayerImg.x > GAME_WIDTH / 2
-				&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_WIDTH && dummy2.x != samplePlayerImg.x)
+				&& map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_WIDTH - map2.width && dummy2.x != samplePlayerImg.x)
 			{
 				samplePlayerImg.screenX = samplePlayerImg.x - dummy2.x;
 				samplePlayerImg.x = dummy2.x;	//ダミーの情報を戻す
@@ -1026,7 +1028,7 @@ VOID PlayProc(VOID)
 			}
 
 			if (samplePlayerImg.y > GAME_HEIGHT / 2
-				&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_HEIGHT && dummy2.y != samplePlayerImg.y)
+				&& map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] > GAME_HEIGHT - map2.height && dummy2.y != samplePlayerImg.y)
 			{
 				samplePlayerImg.screenY = samplePlayerImg.y - dummy2.y;
 				samplePlayerImg.y = dummy2.y;	//ダミーの情報を戻す
@@ -1043,6 +1045,35 @@ VOID PlayProc(VOID)
 			}
 
 			MapMove(&map2);		//マップの移動
+
+			if (map2.x[0][0] > 0)
+			{
+				samplePlayerImg.screenX = map2.x[0][0];
+			}
+			else if (map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] < GAME_WIDTH - map2.width)
+			{
+				samplePlayerImg.screenX = -(GAME_WIDTH - map2.width - map2.x[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1]);
+			}
+			else
+			{
+				samplePlayerImg.screenX = 0;
+			}
+
+			if (map2.y[0][0] > 0)
+			{
+				samplePlayerImg.screenY = map2.y[0][0];
+			}
+			else if (map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] < GAME_HEIGHT - map2.height)
+			{
+				samplePlayerImg.screenY = -(GAME_HEIGHT - map2.height - map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1]);
+			}
+			else
+			{
+				samplePlayerImg.screenY = 0;
+			}
+
+			MapMove(&map2);		//マップの移動
+
 			CollMapUpdate(&map2);		//マップの当たり判定更新
 			SetEventUpdate();		//イベントの座標の更新
 
@@ -1184,10 +1215,10 @@ VOID PlayProc(VOID)
 			//左の項目を上限を超えて上に行ったとき(のちにdefine化)
 			if (MenuStringLeft < 0)
 			{
-				MenuStringLeft = 5;
+				MenuStringLeft = 6;
 			}
 			//左の項目を上限を超えて下に行ったとき
-			else if (MenuStringLeft > 5)
+			else if (MenuStringLeft > 6)
 			{
 				MenuStringLeft = 0;
 			}
@@ -1267,6 +1298,19 @@ VOID PlayProc(VOID)
 					MenuStringRight = GetMainItemCnt-1;
 				}
 				else if (MenuStringRight > GetMainItemCnt-1)
+				{
+					MenuStringRight = 0;
+				}
+			}
+			//左の七項目目の時
+			if (MenuStringLeft == GAME_MENU_CRAFTITEM)
+			{
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = CraftingItemCnt-1;
+				}
+				else if (MenuStringRight > CraftingItemCnt-1)
 				{
 					MenuStringRight = 0;
 				}
@@ -1378,7 +1422,7 @@ VOID PlayProc(VOID)
 			}
 
 			//左
-			//左の項目を上限を超えて上に行ったとき(のちにdefine化)
+			//左の項目を上限を超えて上に行ったとき
 			if (MenuStringLeft < 0)
 			{
 				MenuStringLeft = CRAFTING_ITEM_KIND - 1;
@@ -1392,28 +1436,37 @@ VOID PlayProc(VOID)
 			//決定キーを押したとき
 			if (KeyClick(KEY_INPUT_Z))
 			{
-
-				for (int j = 0; j < CRAFTING_ITEM_KIND; j++)
+				if (CraftingItemMenu[MenuStringLeft].Wood <= GetMainItemMenu[0].Cnt
+					&& CraftingItemMenu[MenuStringLeft].Stone <= GetMainItemMenu[1].Cnt
+					&& CraftingItemMenu[MenuStringLeft].Metal <= GetMainItemMenu[2].Cnt
+					&& CraftingItemMenu[MenuStringLeft].Cnt == 0)
 				{
-					//探査(strcmpDxの仕様良くわかっていない、とりあえず動作したのでこのまま)
-					//存在したなら
-					if (!strcmpDx(GetCraftingItemMenu[j].string, CraftingItemMenu[MenuStringLeft].string))
+					for (int j = 0; j < CRAFTING_ITEM_KIND; j++)
 					{
+						//探査(strcmpDxの仕様良くわかっていない、とりあえず動作したのでこのまま)
+						//存在したなら
+						if (!strcmpDx(GetCraftingItemMenu[j].string, CraftingItemMenu[MenuStringLeft].string))
+						{
 
-						break;
-					}
-					//存在してなく、最後まで行った場合
-					else if (j == MAIN_ITEM_KIND - 1)
-					{
-						//文字列コピー
-						strcpyDx(GetCraftingItemMenu[GetMainItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
-						GetCraftingItemMenu[CraftingItemCnt].Cnt++;
-						CraftingItemMenu[MenuStringLeft].Cnt++;
-						CraftingItemCnt++;
-						break;
+							break;
+						}
+						//存在してなく、最後まで行った場合
+						else if (j == MAIN_ITEM_KIND - 1)
+						{
+							//文字列コピー
+							strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
+							GetCraftingItemMenu[CraftingItemCnt].Cnt++;
+							CraftingItemMenu[MenuStringLeft].Cnt++;
+							CraftingItemCnt++;
+
+							GetMainItemMenu[0].Cnt -= CraftingItemMenu[MenuStringLeft].Wood;
+							GetMainItemMenu[1].Cnt -= CraftingItemMenu[MenuStringLeft].Stone;
+							GetMainItemMenu[2].Cnt -= CraftingItemMenu[MenuStringLeft].Metal;
+
+							break;
+						}
 					}
 				}
-
 				
 			}
 		}
@@ -1432,15 +1485,15 @@ VOID PlayDraw(VOID)
 	//当たり判定の描画
 	//DrawHitBox(&sampleevent);
 
-	DrawHitBox(&CreatePickaxe);
-	DrawHitBox(&CreateAxe);
-	DrawHitBox(&CreateKey);
+	//DrawHitBox(&CreatePickaxe);
+	//DrawHitBox(&CreateAxe);
+	//DrawHitBox(&CreateKey);
 
-	DrawHitBox(&GetItem);
-	DrawHitBox(&GetWood);
-	DrawHitBox(&GetStone);
+	//DrawHitBox(&GetItem);
+	//DrawHitBox(&GetWood);
+	//DrawHitBox(&GetStone);
 
-	DrawHitBox(&Goal);
+	//DrawHitBox(&Goal);
 
 	//サンプル
 	DrawHitBox(&CreateItems);
@@ -1456,15 +1509,15 @@ VOID PlayDraw(VOID)
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 	DrawFormatStringToHandle(950, GAME_HEIGHT - 75, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f", GameTimeLimit);
 
-	DrawFormatStringToHandle(650, 40, GetColor(0, 0, 0), sampleFont1.handle, "ピッケル:%d\n斧　　　:%d\n鍵　　　:%d\n\n木:%d　石:%d",CreatePickaxe.Cnt,CreateAxe.Cnt,CreateKey.Cnt,ItemWood,ItemStone);
+	//DrawFormatStringToHandle(650, 40, GetColor(0, 0, 0), sampleFont1.handle, "ピッケル:%d\n斧　　　:%d\n鍵　　　:%d\n\n木:%d　石:%d",CreatePickaxe.Cnt,CreateAxe.Cnt,CreateKey.Cnt,ItemWood,ItemStone);
 
-	CreateItemDraw(&CreatePickaxe);
-	CreateItemDraw(&CreateAxe);
-	CreateItemDraw(&CreateKey);
+	//CreateItemDraw(&CreatePickaxe);
+	//CreateItemDraw(&CreateAxe);
+	//CreateItemDraw(&CreateKey);
 
-	GetItemDraw(&GetItem);
-	GetItemDraw(&GetWood);
-	GetItemDraw(&GetStone);
+	//GetItemDraw(&GetItem);
+	//GetItemDraw(&GetWood);
+	//GetItemDraw(&GetStone);
 
 	if(MenuScreen==TRUE)
 	{
@@ -1515,6 +1568,11 @@ VOID PlayDraw(VOID)
 				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 120, "素材アイテム", GetColor(100, 100, 100), FALSE);
 			else
 				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 120, "素材アイテム", GetColor(200, 200, 200), FALSE);
+
+			if (MenuStringLeft != GAME_MENU_CRAFTITEM)
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 140, "ツール", GetColor(100, 100, 100), FALSE);
+			else
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 140, "ツール", GetColor(200, 200, 200), FALSE);
 
 
 			//右ブロック
@@ -1626,14 +1684,35 @@ VOID PlayDraw(VOID)
 					}
 				}
 			}
+			//武器防具などクラフト物表示
+			if (MenuStringLeft == GAME_MENU_CRAFTITEM)
+			{
+				//入手した順にアイテムを追加していく
+				for (int i = 0,j = 0; i < CRAFTING_ITEM_KIND; i++)
+				{
+					if (GetCraftingItemMenu[i].Cnt > 0)
+					{
+						if (MenuStringRight == i && MenuRight == TRUE)
+						{
+							DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + ((j + 1) * 20), GetColor(200, 200, 200), "%-14s x%d", GetCraftingItemMenu[i].string, GetCraftingItemMenu[i].Cnt);
+						}
+						else
+						{
+							DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + ((j + 1) * 20), GetColor(100, 100, 100), "%-14s x%d", GetCraftingItemMenu[i].string, GetCraftingItemMenu[i].Cnt);
+						}
+						j++;
+					}
+				}
+			}
+
 		}
 		else if (MenuScreenCrafting == TRUE)
 		{
 			//左ブロック
-			if (MenuRight == FALSE)
+			//if (MenuRight == FALSE)
 				DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
-			else
-				DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
+			//else
+			//	DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
 
 			for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
 			{
@@ -1644,9 +1723,9 @@ VOID PlayDraw(VOID)
 			}
 
 			//右ブロック
-			if (MenuRight == FALSE)
-				DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
-			else
+			//if (MenuRight == FALSE)
+			//	DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
+			//else
 				DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
 
 			
@@ -1669,6 +1748,23 @@ VOID PlayDraw(VOID)
 				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + (20 * (MenuHeightCnt + 1)), GetColor(100, 100, 100), 
 					"%-5s %2d/%2d",GetMainItemMenu[2].string, GetMainItemMenu[2].Cnt, CraftingItemMenu[MenuStringLeft].Metal);
 				MenuHeightCnt++;
+			}
+
+			//材料が足りているのなら(上限の数も後々設定したい)(今は上限一個)
+			if (CraftingItemMenu[MenuStringLeft].Wood <= GetMainItemMenu[0].Cnt
+				&& CraftingItemMenu[MenuStringLeft].Stone <= GetMainItemMenu[1].Cnt
+				&& CraftingItemMenu[MenuStringLeft].Metal <= GetMainItemMenu[2].Cnt
+				&& CraftingItemMenu[MenuStringLeft].Cnt == 0)
+			{
+				DrawString(GAME_WIDTH * 5 / 6 - 100, GAME_HEIGHT * 5 / 6 - 40, "作成可能", GetColor(100, 100, 100), FALSE);
+			}
+			else if (CraftingItemMenu[MenuStringLeft].Cnt > 0)
+			{
+				DrawString(GAME_WIDTH * 5 / 6 - 100, GAME_HEIGHT * 5 / 6 - 40, "作成済み", GetColor(100, 100, 100), FALSE);
+			}
+			else
+			{
+				DrawString(GAME_WIDTH * 5 / 6 - 100, GAME_HEIGHT * 5 / 6 - 40, "作成不可", GetColor(100, 100, 100), FALSE);
 			}
 		}
 	}
