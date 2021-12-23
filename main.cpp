@@ -1441,17 +1441,17 @@ VOID PlayProc(VOID)
 					&& CraftingItemMenu[MenuStringLeft].Metal <= GetMainItemMenu[2].Cnt
 					&& CraftingItemMenu[MenuStringLeft].Cnt == 0)
 				{
-					for (int j = 0; j < CRAFTING_ITEM_KIND; j++)
-					{
+					//for (int j = 0; j < CRAFTING_ITEM_KIND; j++)
+					//{
 						//探査(strcmpDxの仕様良くわかっていない、とりあえず動作したのでこのまま)
 						//存在したなら
-						if (!strcmpDx(GetCraftingItemMenu[j].string, CraftingItemMenu[MenuStringLeft].string))
-						{
+						//if (!strcmpDx(GetCraftingItemMenu[j].string, CraftingItemMenu[MenuStringLeft].string))
+						//{
 
-							break;
-						}
+						//	break;
+						//}
 						//存在してなく、最後まで行った場合
-						else if (j == MAIN_ITEM_KIND - 1)
+						//else if (j == MAIN_ITEM_KIND - 1)
 						{
 							//文字列コピー
 							strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
@@ -1463,9 +1463,9 @@ VOID PlayProc(VOID)
 							GetMainItemMenu[1].Cnt -= CraftingItemMenu[MenuStringLeft].Stone;
 							GetMainItemMenu[2].Cnt -= CraftingItemMenu[MenuStringLeft].Metal;
 
-							break;
+							//break;
 						}
-					}
+					//}
 				}
 				
 			}
