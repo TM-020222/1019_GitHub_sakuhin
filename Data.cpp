@@ -67,7 +67,11 @@ BOOL LoadCSVChara(const char* path, CHARA_DATA* chara, int DataMax, BOOL IsHeade
 			&(chara + LoopCnt)->MAX_HP,
 			&(chara + LoopCnt)->MAX_MP,
 			&(chara + LoopCnt)->MAX_ATK,
-			&(chara + LoopCnt)->MAX_DEF
+			&(chara + LoopCnt)->MAX_DEF,
+			&(chara + LoopCnt)->DEFAULT_HP,
+			&(chara + LoopCnt)->DEFAULT_MP,
+			&(chara + LoopCnt)->DEFAULT_ATK,
+			&(chara + LoopCnt)->DEFAULT_DEF
 			);
 
 		//ŽŸ‚Ìƒf[ƒ^‚Ö

@@ -73,9 +73,9 @@ int sampleGetItemMenuCnt;
 MENU GetMainItemMenu[MAIN_ITEM_KIND];
 int GetMainItemCnt;
 
-MENU GetCraftingItemMenu[CRAFTING_ITEM_KIND];
-MENU CraftingItemMenu[CRAFTING_ITEM_KIND];
-int CraftingItemCnt;
+MENU GetCraftingItemMenu[CRAFTING_ITEM_KIND];	//インベントリ
+MENU CraftingItemMenu[CRAFTING_ITEM_KIND];		//クラフト画面
+int CraftingItemCnt;							//メニューのカウント
 
 MENU DrawConfig;
 
@@ -88,6 +88,8 @@ BOOL PlayerTurn;
 BOOL EnemyTurn;
 BOOL PlayerResult;
 BOOL EnemyResult;
+
+int Damage;
 
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
@@ -612,10 +614,32 @@ VOID PlayInit(VOID)
 	CraftingItemMenu[2].Stone = 1;
 	CraftingItemMenu[2].Metal = 5;
 
+	//武器のステータス
+	CraftingItemMenu[0].HP = 3;
+	CraftingItemMenu[0].MP = 1;
+	CraftingItemMenu[0].ATK = 0;
+	CraftingItemMenu[0].DEF = 0;
 
+	CraftingItemMenu[1].HP = 0;
+	CraftingItemMenu[1].MP = 1;
+	CraftingItemMenu[1].ATK = 0;
+	CraftingItemMenu[1].DEF = 3;
+
+	CraftingItemMenu[2].HP = 0;
+	CraftingItemMenu[2].MP = 1;
+	CraftingItemMenu[2].ATK = 3;
+	CraftingItemMenu[2].DEF = 0;
+
+	//インベントリ
 	for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
 	{
 		strcpyDx(GetCraftingItemMenu[i].string, "");
+		GetCraftingItemMenu[i].Cnt = 0;
+		GetCraftingItemMenu[i].can = FALSE;
+		GetCraftingItemMenu[i].HP = 0;
+		GetCraftingItemMenu[i].MP = 0;
+		GetCraftingItemMenu[i].ATK = 0;
+		GetCraftingItemMenu[i].DEF = 0;
 	}
 
 	//取得したアイテムの種類の個数の初期化
@@ -638,13 +662,31 @@ VOID BattleInit()
 
 	for (int i = 0; i < ENEMY_MAX; i++)
 	{
+		Battleenemy[i].MAX_HP = Battleenemy[i].DEFAULT_HP;
+		Battleenemy[i].MAX_MP = Battleenemy[i].DEFAULT_MP;
 		Battleenemy[i].HP = Battleenemy[i].MAX_HP;
 		Battleenemy[i].MP = Battleenemy[i].MAX_MP;
 
 	}
 
+	PlayChara.MAX_HP = PlayChara.DEFAULT_HP;
+	PlayChara.MAX_MP = PlayChara.DEFAULT_MP;
+	PlayChara.MAX_ATK = PlayChara.DEFAULT_ATK;
+	PlayChara.MAX_DEF = PlayChara.DEFAULT_DEF;
+
+	//インベントリのツール分のステ変動(プレイ画面でも見えるように変更したい)
+	for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
+	{
+		PlayChara.MAX_HP += GetCraftingItemMenu[i].HP;
+		PlayChara.MAX_MP += GetCraftingItemMenu[i].MP;
+		PlayChara.MAX_ATK += GetCraftingItemMenu[i].ATK;
+		PlayChara.MAX_DEF += GetCraftingItemMenu[i].DEF;
+	}
+
 	PlayChara.HP = PlayChara.MAX_HP;
 	PlayChara.MP = PlayChara.MAX_MP;
+	PlayChara.ATK = PlayChara.MAX_ATK;
+	PlayChara.DEF = PlayChara.MAX_DEF;
 
 	turn = 0;
 
@@ -652,6 +694,8 @@ VOID BattleInit()
 	PlayerResult = FALSE;
 	EnemyTurn = FALSE;
 	EnemyResult = FALSE;
+
+	Damage = 0;
 
 	return;
 }
@@ -1441,17 +1485,7 @@ VOID PlayProc(VOID)
 					&& CraftingItemMenu[MenuStringLeft].Metal <= GetMainItemMenu[2].Cnt
 					&& CraftingItemMenu[MenuStringLeft].Cnt == 0)
 				{
-					//for (int j = 0; j < CRAFTING_ITEM_KIND; j++)
-					//{
-						//探査(strcmpDxの仕様良くわかっていない、とりあえず動作したのでこのまま)
-						//存在したなら
-						//if (!strcmpDx(GetCraftingItemMenu[j].string, CraftingItemMenu[MenuStringLeft].string))
-						//{
-
-						//	break;
-						//}
-						//存在してなく、最後まで行った場合
-						//else if (j == MAIN_ITEM_KIND - 1)
+					
 						{
 							//文字列コピー
 							strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
@@ -1459,13 +1493,18 @@ VOID PlayProc(VOID)
 							CraftingItemMenu[MenuStringLeft].Cnt++;
 							CraftingItemCnt++;
 
+							//素材消費
 							GetMainItemMenu[0].Cnt -= CraftingItemMenu[MenuStringLeft].Wood;
 							GetMainItemMenu[1].Cnt -= CraftingItemMenu[MenuStringLeft].Stone;
 							GetMainItemMenu[2].Cnt -= CraftingItemMenu[MenuStringLeft].Metal;
 
-							//break;
+							//ステータスを移動
+							GetCraftingItemMenu[CraftingItemCnt].HP = CraftingItemMenu[MenuStringLeft].HP;
+							GetCraftingItemMenu[CraftingItemCnt].MP = CraftingItemMenu[MenuStringLeft].MP;
+							GetCraftingItemMenu[CraftingItemCnt].ATK = CraftingItemMenu[MenuStringLeft].ATK;
+							GetCraftingItemMenu[CraftingItemCnt].DEF = CraftingItemMenu[MenuStringLeft].DEF;
+
 						}
-					//}
 				}
 				
 			}
@@ -1825,6 +1864,40 @@ VOID BattleProc()
 
 	if (KeyClick(KEY_INPUT_Z))
 	{
+		if (PlayChara.HP <= 0)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			GameOverInit();
+
+			//SEを流す
+			PlayAudio(sceneEnterSE);
+			//音楽を止める
+			StopAudio(&battleBGM);
+
+			//ゲームオーバー画面に切り替え
+			ChangeScene(GAME_SCENE_GAMEOVER);
+
+			return;
+		}
+
+		if (Battleenemy[0].HP <= 0)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			EndInit();
+
+			//SEを流す
+			PlayAudio(sceneEnterSE);
+			//音楽を止める
+			StopAudio(&battleBGM);
+
+			//エンド画面に切り替え
+			ChangeScene(GAME_SCENE_END);
+
+			return;
+		}
+
 		if (PlayerTurn == TRUE && PlayerResult == TRUE)
 		{
 			PlayerTurn = FALSE;
@@ -1852,12 +1925,30 @@ VOID BattleProc()
 
 		if (PlayerResult == TRUE)
 		{
-			Battleenemy[0].HP--;
+			Damage = PlayChara.ATK - Battleenemy[0].DEF;
+			if(Damage<0)
+			{
+				Damage = 0;
+			}
+			Battleenemy[0].HP -= Damage;
+			if (Battleenemy[0].HP < 0)
+			{
+				Battleenemy[0].HP = 0;
+			}
 		}
 		if (EnemyResult == TRUE)
 		{
 			Battleenemy[0].MP-=2;
-			PlayChara.HP--;
+			Damage = Battleenemy[0].ATK - PlayChara.DEF;
+			if (Damage < 0)
+			{
+				Damage = 0;
+			}
+			PlayChara.HP -= Damage;
+			if (PlayChara.HP < 0)
+			{
+				PlayChara.HP = 0;
+			}
 		}
 	}
 
@@ -1907,13 +1998,13 @@ VOID BattleDraw()
 	DrawBox(GAME_WIDTH - 350, 50, GAME_WIDTH - 50, 190, GetColor(200, 200, 200), TRUE);
 
 	if (PlayerTurn)
-		DrawString(520, GAME_HEIGHT - 130, "プレイヤーのこうげき！", GetColor(0, 0, 0), FALSE);
+		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s のこうげき！",PlayChara.Name);
 	if(PlayerResult)
-		DrawString(520, GAME_HEIGHT - 110, "敵に１ダメージ！", GetColor(0, 0, 0), FALSE);
+		DrawFormatString(520, GAME_HEIGHT - 110, GetColor(0, 0, 0), "%s に %d ダメージ！",Battleenemy[0].Name,Damage);
 	if (EnemyTurn)
-		DrawString(520, GAME_HEIGHT - 130, "敵のこうげき！", GetColor(0, 0, 0), FALSE);
+		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s のこうげき！", Battleenemy[0].Name);
 	if(EnemyResult)
-		DrawString(520, GAME_HEIGHT - 110, "プレイヤーに１ダメージ！", GetColor(0, 0, 0), FALSE);
+		DrawFormatString(520, GAME_HEIGHT - 110, GetColor(0, 0, 0), "%s に %d ダメージ！", PlayChara.Name, Damage);
 
 
 	//ターン表示 (デバッグ限定予定)

@@ -143,11 +143,15 @@ struct MENU
 	int Stone = -1;
 	int Metal = -1;
 
-	int Cnt = 0;
+	int HP = -1;
+	int MP = -1;
+	int ATK = -1;
+	int DEF = -1;
+
+	int Cnt = -1;
 
 	BOOL can = FALSE;
 };
-
 //########## 外部のグローバル変数 ##########
 extern DIVIMAGE samplePlayerImg;
 

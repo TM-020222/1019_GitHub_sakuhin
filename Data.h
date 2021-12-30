@@ -20,7 +20,7 @@
 
 //データの書式指定子
 //キャラクターの書式指定子
-#define CSV_CHARA_FORMAT	TEXT("%d,%[^,],%d,%d,%d,%d,%d,%d,%d,%d")
+#define CSV_CHARA_FORMAT	TEXT("%d,%[^,],%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d")
 
 //敵データ
 #define ENEMY_MAX	1
@@ -94,6 +94,11 @@ struct CHARA_DATA
 	int MAX_MP;				//MP
 	int MAX_ATK;			//攻撃力
 	int MAX_DEF;			//防御力
+
+	int DEFAULT_HP;			//初期値
+	int DEFAULT_MP;			//初期値
+	int DEFAULT_ATK;		//初期値
+	int DEFAULT_DEF;		//初期値
 };
 
 struct SCORE_DATA
