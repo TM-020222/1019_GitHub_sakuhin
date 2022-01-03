@@ -645,6 +645,7 @@ VOID PlayInit(VOID)
 	//æ“¾‚µ‚½ƒAƒCƒeƒ€‚Ìí—Ş‚ÌŒÂ”‚Ì‰Šú‰»
 	sampleGetItemMenuCnt = 0;
 	GetMainItemCnt = 0;
+	CraftingItemCnt = 0;
 
 	samplePlayerImg.screenX = 0;
 	samplePlayerImg.screenY = 0;
@@ -1491,7 +1492,6 @@ VOID PlayProc(VOID)
 							strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
 							GetCraftingItemMenu[CraftingItemCnt].Cnt++;
 							CraftingItemMenu[MenuStringLeft].Cnt++;
-							CraftingItemCnt++;
 
 							//‘fŞÁ”ï
 							GetMainItemMenu[0].Cnt -= CraftingItemMenu[MenuStringLeft].Wood;
@@ -1504,6 +1504,7 @@ VOID PlayProc(VOID)
 							GetCraftingItemMenu[CraftingItemCnt].ATK = CraftingItemMenu[MenuStringLeft].ATK;
 							GetCraftingItemMenu[CraftingItemCnt].DEF = CraftingItemMenu[MenuStringLeft].DEF;
 
+							CraftingItemCnt++;
 						}
 				}
 				
