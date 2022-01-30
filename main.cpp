@@ -64,7 +64,6 @@ int MenuStringLeft;
 int MenuStringRight;
 
 //コンフィグ関連
-MENU test[2];
 
 //メニュー画面のサンプル
 MENU sampleGetItemMenu[4];
@@ -157,6 +156,7 @@ VOID GetItemSystem(EVENT* events, EVENT* tools);				//採取の個数変動
 VOID GetItemDraw(EVENT* events);				//採取時の個数表示
 
 VOID SetEventUpdate();							//イベントの場所更新
+VOID StatusUpdate(MENU tool);					//ステータスの変動用
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
 
@@ -200,8 +200,12 @@ EVENT GetMainItem[MAIN_ITEM_KIND];	//石、木材、金属
 
 //ロゴなどの画像
 IMAGE TitleImg;
+IMAGE TitleLogo;
+IMAGE BattleImg;
 IMAGE EndImg;
+IMAGE EndLogo;
 IMAGE GameoverImg;
+IMAGE GameoverLogo;
 
 IMAGE PushEnter;
 
@@ -211,10 +215,15 @@ BOOL MenuScreenCrafting;
 
 BOOL MenuRight;
 
+int GetItemCnt;
+int GetItemCntMax;
 
 //戦闘画面
 CHARA_DATA Battleenemy[ENEMY_MAX];
 CHARA_DATA PlayChara;
+
+char BattleLog[4][255];
+char BattleText[255];
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(
@@ -410,9 +419,13 @@ BOOL GameLoad(VOID)
 	) == FALSE) {return FALSE; }
 
 	//ロゴ読み込み
-	if (LoadImageMem(&TitleImg, ".\\Image\\脱出_タイトル.png") == FALSE) { return FALSE; }
-	if (LoadImageMem(&EndImg, ".\\Image\\脱出_ゲームクリア.png") == FALSE) { return FALSE; }
-	if (LoadImageMem(&GameoverImg, ".\\Image\\脱出_ゲームオーバー.png") == FALSE) { return FALSE; }
+	if (LoadImageMem(&TitleImg, ".\\Image\\タイトル背景.jpg") == FALSE) { return FALSE; }
+	if (LoadImageMem(&TitleLogo, ".\\Image\\タイトルロゴ.png") == FALSE) { return FALSE; }
+	if (LoadImageMem(&BattleImg, ".\\Image\\field_d.jpg") == FALSE) { return FALSE; }
+	if (LoadImageMem(&EndImg, ".\\Image\\GAME_CLEAR背景.jpg") == FALSE) { return FALSE; }
+	if (LoadImageMem(&EndLogo, ".\\Image\\ゲームクリアロゴ.png") == FALSE) { return FALSE; }
+	if (LoadImageMem(&GameoverImg, ".\\Image\\GAME_OVER背景.jpg") == FALSE) { return FALSE; }
+	if (LoadImageMem(&GameoverLogo, ".\\Image\\ゲームオーバーロゴ.png") == FALSE) { return FALSE; }
 	if (LoadImageMem(&PushEnter, ".\\Image\\脱出_Enter.png") == FALSE) { return FALSE; }
 
 	//敵画像を読み込み
@@ -457,8 +470,12 @@ VOID GameDelete(VOID)
 
 	//画像を削除
 	DeleteGraph(TitleImg.handle);
+	DeleteGraph(TitleLogo.handle);
+	DeleteGraph(BattleImg.handle);
 	DeleteGraph(EndImg.handle);
+	DeleteGraph(EndLogo.handle);
 	DeleteGraph(GameoverImg.handle);
+	DeleteGraph(GameoverLogo.handle);
 	DeleteGraph(PushEnter.handle);
 
 	return;
@@ -493,9 +510,25 @@ VOID TitleInit(VOID)
 	TitleImg.x = 0;
 	TitleImg.y = 0;
 
+	TitleLogo.IsDraw = TRUE;
+	TitleLogo.x = GAME_WIDTH / 2 - TitleLogo.width / 2;
+	TitleLogo.y = TitleLogo.height / 6;
+
 	PushEnter.IsDraw = TRUE;
 	PushEnter.x = 0;
 	PushEnter.y = 0;
+
+	//基のステータスに初期化
+	PlayChara.MAX_HP = PlayChara.DEFAULT_HP;
+	PlayChara.MAX_MP = PlayChara.DEFAULT_MP;
+	PlayChara.MAX_ATK = PlayChara.DEFAULT_ATK;
+	PlayChara.MAX_DEF = PlayChara.DEFAULT_DEF;
+
+	//ステータス初期化
+	PlayChara.HP = PlayChara.MAX_HP;
+	PlayChara.MP = PlayChara.MAX_MP;
+	PlayChara.ATK = PlayChara.MAX_ATK;
+	PlayChara.DEF = PlayChara.MAX_DEF;
 
 	return;
 }
@@ -563,15 +596,6 @@ VOID PlayInit(VOID)
 	DrawConfig.Cnt = 1;
 	DrawConfig.can = FALSE;
 
-	for (int i = 0; i < 3; i++)
-	{
-		test[i].Cnt = 0;
-		test[i].can = FALSE;
-	}
-	strcpyDx(test[0].string, "関数てすと1");
-	strcpyDx(test[1].string, "関数てすと2");
-	strcpyDx(test[2].string, "関数てすと3");
-
 	//イベントの初期化
 	for (int i = 0; i < MAIN_ITEM_KIND; i++)
 	{
@@ -588,6 +612,7 @@ VOID PlayInit(VOID)
 	for (int i = 0; i < MAIN_ITEM_KIND; i++)
 	{
 		strcpyDx(GetMainItemMenu[i].string,GetMainItem[i].string);
+		GetMainItemMenu[i].Cnt = 0;
 	}
 
 	//クラフトのメニューの初期化
@@ -650,16 +675,27 @@ VOID PlayInit(VOID)
 	samplePlayerImg.screenX = 0;
 	samplePlayerImg.screenY = 0;
 	MapInit(&map2);
+
+	//採取回数
+	GetItemCnt = 0;
+	GetItemCntMax = 30;
 	
 	return;
 }
 
 VOID BattleInit()
 {
+	//背景初期化
+	BattleImg.IsDraw = TRUE;
+	BattleImg.x = 0;
+	BattleImg.y = 0;
+
 	//敵初期化
 	enemyImg1.x = GAME_WIDTH / 2 - enemyImg1.width / 2;
 	enemyImg1.y = GAME_HEIGHT / 2 - enemyImg1.height / 2 - 50;	//マジックナンバー
 	enemyImg1.IsDraw = TRUE;
+
+	CollUpdateImage(&enemyImg1);
 
 	for (int i = 0; i < ENEMY_MAX; i++)
 	{
@@ -667,21 +703,6 @@ VOID BattleInit()
 		Battleenemy[i].MAX_MP = Battleenemy[i].DEFAULT_MP;
 		Battleenemy[i].HP = Battleenemy[i].MAX_HP;
 		Battleenemy[i].MP = Battleenemy[i].MAX_MP;
-
-	}
-
-	PlayChara.MAX_HP = PlayChara.DEFAULT_HP;
-	PlayChara.MAX_MP = PlayChara.DEFAULT_MP;
-	PlayChara.MAX_ATK = PlayChara.DEFAULT_ATK;
-	PlayChara.MAX_DEF = PlayChara.DEFAULT_DEF;
-
-	//インベントリのツール分のステ変動(プレイ画面でも見えるように変更したい)
-	for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
-	{
-		PlayChara.MAX_HP += GetCraftingItemMenu[i].HP;
-		PlayChara.MAX_MP += GetCraftingItemMenu[i].MP;
-		PlayChara.MAX_ATK += GetCraftingItemMenu[i].ATK;
-		PlayChara.MAX_DEF += GetCraftingItemMenu[i].DEF;
 	}
 
 	PlayChara.HP = PlayChara.MAX_HP;
@@ -698,6 +719,12 @@ VOID BattleInit()
 
 	Damage = 0;
 
+	strcpyDx(BattleLog[0], "てすと1");
+	strcpyDx(BattleLog[1], "てすと2");
+	strcpyDx(BattleLog[2], "てすと3");
+	strcpyDx(BattleLog[3], "てすと4");
+
+
 	return;
 }
 
@@ -708,6 +735,10 @@ VOID EndInit(VOID)
 	EndImg.x = 0;
 	EndImg.y = 0;
 
+	EndLogo.IsDraw = TRUE;
+	EndLogo.x = GAME_WIDTH / 2 - EndLogo.width / 2;
+	EndLogo.y = GAME_HEIGHT / 2 - EndLogo.height / 2;
+
 	return;
 }
 
@@ -717,6 +748,10 @@ VOID GameOverInit(VOID)
 	GameoverImg.IsDraw = TRUE;
 	GameoverImg.x = 0;
 	GameoverImg.y = 0;
+
+	GameoverLogo.IsDraw = TRUE;
+	GameoverLogo.x = GAME_WIDTH / 2 - GameoverLogo.width / 2;
+	GameoverLogo.y = GAME_HEIGHT / 2 - GameoverLogo.height / 2;
 
 	return;
 }
@@ -801,6 +836,7 @@ VOID TitleProc(VOID)
 		}
 	}
 
+	CollUpdateImage(&TitleLogo);
 
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
@@ -824,20 +860,6 @@ VOID TitleProc(VOID)
 
 	PlayAudio(titleBGM);	//BGMを鳴らす
 
-	//プレイヤーの動作サンプル
-	/*
-	{
-		muki = muki_none;	//最初は向きを無しにする
-		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; samplePlayerImg.y--; }
-		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; samplePlayerImg.y++; }
-		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; samplePlayerImg.x--; }
-		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; samplePlayerImg.x++; }
-		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
-	}
-	*/
-
-	
-
 	return;
 }
 
@@ -846,43 +868,8 @@ VOID TitleProc(VOID)
 /// </summary>
 VOID TitleDraw(VOID)
 {
-
-	/*
-	DrawImage(sampleImg);				//サンプル画像の描画
-	DrawDivImage(&sampleDivImg);		//サンプル分割画像の描画
-
-	//プレイヤーの動作サンプル
-	{
-		DrawDivImageChara(&samplePlayerImg);//サンプル分割画像の描画
-	}
-
-	//ゲーム内時間
-	DrawFormatString(500, 50, GetColor(0, 0, 0), "TIME:%3.2f", GetGameTime());
-
-	//ゲーム内時間
-	DrawFormatString(500, 30, GetColor(0, 0, 0), "残り:%3.2f", GameTimeLimit);
-
-	//現在の日付と時刻
-	DrawFormatString(500, 70, GetColor(0, 0, 0), "DATE:%4d/%2d/%2d %2d:%2d:%2d", fps.NowDataTime.Year, fps.NowDataTime.Mon, fps.NowDataTime.Day, fps.NowDataTime.Hour, fps.NowDataTime.Min, fps.NowDataTime.Sec);
-
-	//フォントのサンプル
-	DrawStringToHandle(100, 100, "MS ゴシックだよ", GetColor(0, 0, 0), sampleFont1.handle);
-	
-	//フォントのサンプル
-	DrawStringToHandle(100, 150, "昔々ふぉんとだよ", GetColor(0, 0, 0), sampleFont3.handle);
-
-	//数値を出したいとき
-	DrawFormatStringToHandle(800, 200, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f",GameTimeLimit);
-	
-	//読み込んだデータを描画
-	for (int i = 0; i < ENEMY_MAX; i++)
-	{
-		DrawFormatString(300, 300 + i * 20, GetColor(0, 0, 0), "%s,%2d,%2d,%2d"
-			, enemy[i].Name, enemy[i].HP, enemy[i].ATK, enemy[i].DEF);
-	}
-	*/
-
 	DrawImage(TitleImg);
+	DrawImage(TitleLogo);
 	DrawImage(PushEnter);
 
 	if(GAME_DEBUG)DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
@@ -1038,21 +1025,6 @@ VOID PlayProc(VOID)
 				}
 				CollUpdateDivImage(&dummy);	//当たり判定の更新
 			}
-			//画面端にいった場合
-			/*if (samplePlayerImg.y < map2.y[0][0]) { samplePlayerImg.y = map2.y[0][0]; }	//未確認
-			if (samplePlayerImg.y > map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20)
-			{
-				samplePlayerImg.y = map2.y[MAP1_TATE_MAX - 1][MAP1_YOKO_MAX - 1] - 20;	//マジックナンバー
-			}
-
-			if (samplePlayerImg.x < map2.x[0][0]) { samplePlayerImg.x = map2.x[0][0]; }
-			if (samplePlayerImg.x > map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1])
-			{
-				samplePlayerImg.x = map2.x[MAP1_TATE_MAX-1][MAP1_YOKO_MAX-1];
-			}*/
-
-			//移動した後のやつ
-			DIVIMAGE dummy3 = samplePlayerImg;
 
 			//プレイヤーの幅の考慮無し,要修正
 			if (samplePlayerImg.x > GAME_WIDTH / 2
@@ -1124,31 +1096,6 @@ VOID PlayProc(VOID)
 
 			CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
 
-			//イベントマスに当たっているか
-			if (CheckCollRectToRect(samplePlayerImg.coll, Goal.coll) == TRUE && CreateKey.Cnt > 0)
-			{
-				//ゲームデータの初期化
-				GameInit();
-				EndInit();
-
-				//マップ移動のフラグ
-				//sampleevent.can = TRUE;
-
-				//音楽を止める
-				StopAudio(&playBGM);
-
-				//プレイ画面に切り替え
-				ChangeScene(GAME_SCENE_END);
-			}
-
-			CreateItem(&CreatePickaxe);
-			CreateItem(&CreateAxe);
-			CreateItem(&CreateKey);
-
-			GetItemSystem(&GetItem, NULL);
-			GetItemSystem(&GetWood, &CreateAxe);
-			GetItemSystem(&GetStone, &CreatePickaxe);
-
 			//クラフトイベント
 			if (CheckCollRectToRect(samplePlayerImg.coll, CreateItems.coll))
 			{
@@ -1203,6 +1150,7 @@ VOID PlayProc(VOID)
 							if (!strcmpDx(GetMainItemMenu[j].string, GetMainItem[i].string))
 							{
 								GetMainItemMenu[j].Cnt++;
+								GetItemCnt++;
 								break;
 							}
 						}
@@ -1215,18 +1163,19 @@ VOID PlayProc(VOID)
 
 		}
 
-		GameTimeLimit -= fps.DeltaTime;
-		if (GameTimeLimit <= 0)
+		if (GetItemCnt == GetItemCntMax)
 		{
 			//ゲームデータの初期化
 			GameInit();
-			GameOverInit();
+			BattleInit();
 
+			//SEを流す
+			PlayAudio(sceneEnterSE);
 			//音楽を止める
 			StopAudio(&playBGM);
 
-			//プレイ画面に切り替え
-			ChangeScene(GAME_SCENE_GAMEOVER);
+			//戦闘画面に切り替え
+			ChangeScene(GAME_SCENE_BATTLE);
 		}
 	}
 	//メニューを開いているとき
@@ -1260,10 +1209,10 @@ VOID PlayProc(VOID)
 			//左の項目を上限を超えて上に行ったとき(のちにdefine化)
 			if (MenuStringLeft < 0)
 			{
-				MenuStringLeft = 6;
+				MenuStringLeft = 7;
 			}
 			//左の項目を上限を超えて下に行ったとき
-			else if (MenuStringLeft > 6)
+			else if (MenuStringLeft > 7)
 			{
 				MenuStringLeft = 0;
 			}
@@ -1359,6 +1308,11 @@ VOID PlayProc(VOID)
 				{
 					MenuStringRight = 0;
 				}
+			}
+			//左の八項目目の時(見るようなので動きなし)
+			if (MenuStringLeft == GAME_MENU_STATUS)
+			{
+
 			}
 
 			//決定ボタンを押したとき
@@ -1504,6 +1458,10 @@ VOID PlayProc(VOID)
 							GetCraftingItemMenu[CraftingItemCnt].ATK = CraftingItemMenu[MenuStringLeft].ATK;
 							GetCraftingItemMenu[CraftingItemCnt].DEF = CraftingItemMenu[MenuStringLeft].DEF;
 
+							//ステ変動
+							StatusUpdate(GetCraftingItemMenu[CraftingItemCnt]);
+
+							//ツールの種類プラス
 							CraftingItemCnt++;
 						}
 				}
@@ -1547,7 +1505,7 @@ VOID PlayDraw(VOID)
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
 	DrawBox(930, GAME_HEIGHT - 90, GAME_WIDTH, GAME_HEIGHT, GetColor(50, 50, 50), TRUE);
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-	DrawFormatStringToHandle(950, GAME_HEIGHT - 75, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f", GameTimeLimit);
+	DrawFormatStringToHandle(950, GAME_HEIGHT - 75, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3d回", GetItemCntMax - GetItemCnt);
 
 	//DrawFormatStringToHandle(650, 40, GetColor(0, 0, 0), sampleFont1.handle, "ピッケル:%d\n斧　　　:%d\n鍵　　　:%d\n\n木:%d　石:%d",CreatePickaxe.Cnt,CreateAxe.Cnt,CreateKey.Cnt,ItemWood,ItemStone);
 
@@ -1614,6 +1572,11 @@ VOID PlayDraw(VOID)
 			else
 				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 140, "ツール", GetColor(200, 200, 200), FALSE);
 
+			if (MenuStringLeft != GAME_MENU_STATUS)
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 160, "ステータス", GetColor(100, 100, 100), FALSE);
+			else
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 160, "ステータス", GetColor(200, 200, 200), FALSE);
+
 
 			//右ブロック
 			if (MenuRight == FALSE)
@@ -1640,10 +1603,7 @@ VOID PlayDraw(VOID)
 				for (int i = 0; i < 3; i++)
 				{
 					//配列の関数を表示させるテスト
-					if (MenuStringRight == i && MenuRight == TRUE)
-						DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), test[i].string, GetColor(200, 200, 200), FALSE);
-					else
-						DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), test[i].string, GetColor(100, 100, 100), FALSE);
+					//エラー出るので削除
 				}
 
 			}
@@ -1745,14 +1705,20 @@ VOID PlayDraw(VOID)
 				}
 			}
 
+			if (MenuStringLeft == GAME_MENU_STATUS)
+			{
+				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, GetColor(100, 100, 100), "Name : %s", PlayChara.Name);
+				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, GetColor(100, 100, 100), "HP   : %d / %d", PlayChara.HP, PlayChara.MAX_HP);
+				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 80, GetColor(100, 100, 100), "MP   : %d / %d", PlayChara.MP, PlayChara.MAX_MP);
+				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GetColor(100, 100, 100), "ATK  : %d", PlayChara.ATK);
+				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 120, GetColor(100, 100, 100), "DEF  : %d", PlayChara.DEF);
+			}
+
 		}
 		else if (MenuScreenCrafting == TRUE)
 		{
 			//左ブロック
-			//if (MenuRight == FALSE)
 				DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
-			//else
-			//	DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
 
 			for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
 			{
@@ -1763,9 +1729,6 @@ VOID PlayDraw(VOID)
 			}
 
 			//右ブロック
-			//if (MenuRight == FALSE)
-			//	DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
-			//else
 				DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
 
 			
@@ -1958,14 +1921,21 @@ VOID BattleProc()
 
 VOID BattleDraw()
 {
+	DrawImage(BattleImg);
+
 	//敵の描画
 	DrawImage(enemyImg1);
 
 	//敵のバー表示
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
 	DrawBox(enemyImg1.x + enemyImg1.width, enemyImg1.y + enemyImg1.height / 2 - 35, enemyImg1.x + enemyImg1.width + 280, enemyImg1.y + enemyImg1.height / 2 + 35, GetColor(230, 230, 230), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
 	//HP
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
 	DrawBox(enemyImg1.x + enemyImg1.width+75, enemyImg1.y + enemyImg1.height / 2 - 25, enemyImg1.x + enemyImg1.width + 275, enemyImg1.y + enemyImg1.height / 2 - 10, GetColor(150, 150, 150), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
 	DrawBox(enemyImg1.x + enemyImg1.width+75, enemyImg1.y + enemyImg1.height / 2 - 25, enemyImg1.x + enemyImg1.width + 75 + ((Battleenemy[0].HP*100/Battleenemy[0].MAX_HP)*2)
 		, enemyImg1.y + enemyImg1.height / 2 - 10, GetColor(255, 0, 0), TRUE);
 	DrawFormatString(enemyImg1.x + enemyImg1.width+10, enemyImg1.y + enemyImg1.height / 2 - 27, GetColor(0, 0, 0), "%2d/%2d", Battleenemy[0].HP, Battleenemy[0].MAX_HP);
@@ -1979,7 +1949,10 @@ VOID BattleDraw()
 
 
 	//味方のウィンドウ+バー
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
 	DrawBox(180, GAME_HEIGHT - 150, GAME_WIDTH - 200, GAME_HEIGHT - 50, GetColor(230, 230, 230), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
 	DrawString(190, GAME_HEIGHT - 135, "HP", GetColor(200, 0, 0), FALSE);
 	DrawFormatString(220, GAME_HEIGHT - 135, GetColor(0, 0, 0), "%2d/%2d", PlayChara.HP,PlayChara.MAX_HP);
 
@@ -1987,7 +1960,6 @@ VOID BattleDraw()
 	DrawFormatString(220, GAME_HEIGHT - 85, GetColor(0, 0, 0), "%2d/%2d", PlayChara.MP, PlayChara.MAX_MP);
 
 	DrawBox(495, GAME_HEIGHT - 145, GAME_WIDTH - 205, GAME_HEIGHT - 55, GetColor(200, 200, 200), TRUE);
-	//DrawString(520, GAME_HEIGHT - 130, "てすと", GetColor(0, 0, 0), FALSE);
 
 	DrawBox(280, GAME_HEIGHT - 150 + 10, 480, GAME_HEIGHT - 150 + 40, GetColor(150, 150, 150), TRUE);
 	DrawBox(280, GAME_HEIGHT - 150 + 10, 280+ ((PlayChara.HP * 100 / PlayChara.MAX_HP) * 2), GAME_HEIGHT - 150 + 40, GetColor(255, 0, 0), TRUE);
@@ -1996,7 +1968,14 @@ VOID BattleDraw()
 	DrawBox(280, GAME_HEIGHT - 150 + 60, 280 + ((PlayChara.MP * 100 / PlayChara.MAX_MP) * 2), GAME_HEIGHT - 150 + 90, GetColor(0, 0, 255), TRUE);
 
 	//ログ表示
-	DrawBox(GAME_WIDTH - 350, 50, GAME_WIDTH - 50, 190, GetColor(200, 200, 200), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
+	DrawBox(GAME_WIDTH - 350, 10, GAME_WIDTH - 50, 110, GetColor(200, 200, 200), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+	for (int i = 0; i < 4; i++)
+	{
+		DrawString(GAME_WIDTH - 340, 80 - (i * 20), BattleLog[i], GetColor(150, 150, 150));
+	}
 
 	if (PlayerTurn)
 		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s のこうげき！",PlayChara.Name);
@@ -2008,7 +1987,7 @@ VOID BattleDraw()
 		DrawFormatString(520, GAME_HEIGHT - 110, GetColor(0, 0, 0), "%s に %d ダメージ！", PlayChara.Name, Damage);
 
 
-	//ターン表示 (デバッグ限定予定)
+	//ターン表示 (デバッグ限定)
 	if (GAME_DEBUG)
 	{
 		DrawFormatString(20, 40, GetColor(0, 0, 0), "たーん:%d", turn);
@@ -2069,6 +2048,7 @@ VOID EndProc(VOID)
 VOID EndDraw(VOID)
 {
 	DrawImage(EndImg);
+	DrawImage(EndLogo);
 
 	//数値を出したいとき
 	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
@@ -2122,9 +2102,7 @@ VOID GameOverProc(VOID)
 VOID GameOverDraw(VOID)
 {
 	DrawImage(GameoverImg);
-
-	//数値を出したいとき
-	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
+	DrawImage(GameoverLogo);
 
 	if (GAME_DEBUG)DrawString(0, 0, "ゲームオーバー画面", GetColor(0, 0, 0));
 	return;
@@ -2825,3 +2803,15 @@ VOID GetItemDraw(EVENT* events)
 	return;
 }
 
+VOID StatusUpdate(MENU tool)
+{
+	PlayChara.MAX_HP += tool.HP;
+	PlayChara.MAX_MP += tool.MP;
+	PlayChara.MAX_ATK += tool.ATK;
+	PlayChara.MAX_DEF += tool.DEF;
+
+	PlayChara.HP = PlayChara.MAX_HP;
+	PlayChara.MP = PlayChara.MAX_MP;
+	PlayChara.ATK = PlayChara.MAX_ATK;
+	PlayChara.DEF = PlayChara.MAX_DEF;
+}
