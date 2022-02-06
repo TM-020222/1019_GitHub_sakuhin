@@ -157,6 +157,7 @@ VOID GetItemDraw(EVENT* events);				//採取時の個数表示
 
 VOID SetEventUpdate();							//イベントの場所更新
 VOID StatusUpdate(MENU tool);					//ステータスの変動用
+VOID SetCharaCmd(CHARA_CMD* cmd,const char name[255],int cost,float multi,BOOL myself);		//技の設定
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
 
@@ -176,6 +177,14 @@ AUDIO endBGM;
 AUDIO gameoverBGM;
 
 AUDIO sceneEnterSE;
+AUDIO enterSE;
+AUDIO returnSE;
+AUDIO cursorSE;
+AUDIO collectSE;
+AUDIO beepSE;
+
+//戦闘SE
+AUDIO BattleSE[6];
 
 MAP_DATA map1;
 MAP_DATA map2;
@@ -224,6 +233,12 @@ CHARA_DATA PlayChara;
 
 char BattleLog[4][255];
 char BattleText[255];
+
+//技の選択
+BOOL BattleMenuUp;
+BOOL BattleMenuLeft;
+int BattlePlayCmd;
+BOOL MPsmall;
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(
@@ -405,6 +420,18 @@ BOOL GameLoad(VOID)
 	if (LoadAudio(&gameoverBGM, ".\\audio\\拭えない悲しみと迫り来る明日.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
 
 	if (LoadAudio(&sceneEnterSE, ".\\SE\\システム決定音_9_2.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&enterSE, ".\\SE\\システム決定音_3.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&returnSE, ".\\SE\\キャンセル2.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&cursorSE, ".\\SE\\カーソル移動8.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&collectSE, ".\\SE\\決定、ボタン押下29.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&beepSE, ".\\SE\\ビープ音.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+
+	if (LoadAudio(&BattleSE[0], ".\\SE\\BattleSE\\ダメージ音01.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&BattleSE[1], ".\\SE\\BattleSE\\重いパンチ2.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&BattleSE[2], ".\\SE\\BattleSE\\打撃6.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&BattleSE[3], ".\\SE\\BattleSE\\剣で斬る1.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&BattleSE[4], ".\\SE\\BattleSE\\火炎魔法1.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
+	if (LoadAudio(&BattleSE[5], ".\\SE\\BattleSE\\回復魔法1.mp3", 128, DX_PLAYTYPE_BACK) == FALSE) { return FALSE; }
 
 	//マップデータを読み込み
 	if(LoadCSVMap(
@@ -464,6 +491,15 @@ VOID GameDelete(VOID)
 	DeleteMusicMem(gameoverBGM.handle);
 
 	DeleteMusicMem(sceneEnterSE.handle);
+	DeleteMusicMem(enterSE.handle);
+	DeleteMusicMem(returnSE.handle);
+	DeleteMusicMem(cursorSE.handle);
+	DeleteMusicMem(collectSE.handle);
+
+	for (int i = 0; i < 6; i++)
+	{
+		DeleteMusicMem(BattleSE[i].handle);
+	}
 
 	//フォントデータを削除
 	FontDelete();
@@ -724,6 +760,15 @@ VOID BattleInit()
 	strcpyDx(BattleLog[2], "てすと3");
 	strcpyDx(BattleLog[3], "てすと4");
 
+	SetCharaCmd(&PlayChara.cmd[0], "こうげき", 0, 1, FALSE);
+	SetCharaCmd(&PlayChara.cmd[1], "きりさく", 1, 1.2, FALSE);
+	SetCharaCmd(&PlayChara.cmd[2], "ファイア", 4, 2, FALSE);
+	SetCharaCmd(&PlayChara.cmd[3], "ヒール", 5, 2, TRUE);
+
+	BattleMenuUp = TRUE;
+	BattleMenuLeft = TRUE;
+	BattlePlayCmd = 0;
+	MPsmall = FALSE;
 
 	return;
 }
@@ -924,27 +969,39 @@ VOID PlayProc(VOID)
 	if (KeyClick(KEY_INPUT_X))
 	{
 		if(OpenVolumecfg==TRUE)
-		{ OpenVolumecfg = FALSE;}
+		{
+			OpenVolumecfg = FALSE;
+			PlayAudio(returnSE);
+		}
 		else if(DrawConfig.can==TRUE)
-		{ DrawConfig.can = FALSE;}
+		{
+			DrawConfig.can = FALSE;
+			PlayAudio(returnSE);
+		}
 		else if (MenuScreen == TRUE && MenuRight == FALSE && MenuScreenInventory==TRUE)
 		{
 			MenuScreen = FALSE;
 			MenuScreenInventory = FALSE;
 			MenuStringLeft = 0;
+			PlayAudio(returnSE);
 		}
 		else if (MenuScreen == TRUE && MenuRight == FALSE && MenuScreenCrafting==TRUE)
 		{
 			MenuScreen = FALSE;
 			MenuScreenCrafting = FALSE;
 			MenuStringLeft = 0;
+			PlayAudio(returnSE);
 		}
 		else if (MenuRight == TRUE)
-		{ MenuRight = FALSE;}
+		{
+			MenuRight = FALSE;
+			PlayAudio(returnSE);
+		}
 		else if (MenuScreen == FALSE)
 		{
 			MenuScreen = TRUE;
 			MenuScreenInventory = TRUE;
+			PlayAudio(enterSE);
 		}
 	}
 
@@ -1101,6 +1158,7 @@ VOID PlayProc(VOID)
 			{
 				if (KeyClick(KEY_INPUT_Z))
 				{
+					PlayAudio(enterSE);
 					MenuScreen = TRUE;
 					MenuScreenCrafting = TRUE;
 				}
@@ -1144,6 +1202,7 @@ VOID PlayProc(VOID)
 					//Zを押したら
 					if (KeyClick(KEY_INPUT_Z))
 					{
+						PlayAudio(collectSE);
 						for (int j = 0; j < MAIN_ITEM_KIND; j++)
 						{
 							//探査(strcmpDxの仕様良くわかっていない、とりあえず動作したのでこのまま)
@@ -1186,6 +1245,7 @@ VOID PlayProc(VOID)
 		{
 			if (KeyClick(KEY_INPUT_DOWN))
 			{
+				PlayAudio(cursorSE);
 				if (MenuRight == FALSE)
 				{
 					MenuStringLeft++;
@@ -1196,6 +1256,7 @@ VOID PlayProc(VOID)
 			}
 			else if (KeyClick(KEY_INPUT_UP))
 			{
+				PlayAudio(cursorSE);
 				if (MenuRight == FALSE)
 				{
 					MenuStringLeft--;
@@ -1318,6 +1379,7 @@ VOID PlayProc(VOID)
 			//決定ボタンを押したとき
 			if (KeyClick(KEY_INPUT_Z))
 			{
+				PlayAudio(enterSE);
 				//左項目にいるとき
 				if (MenuRight == FALSE)
 				{
@@ -1328,7 +1390,7 @@ VOID PlayProc(VOID)
 				else
 				{
 
-
+					PlayAudio(enterSE);
 					//三行目
 					if (MenuStringLeft == 2)
 					{
@@ -1400,6 +1462,7 @@ VOID PlayProc(VOID)
 			//下
 			if (KeyClick(KEY_INPUT_DOWN))
 			{
+				PlayAudio(cursorSE);
 				if (MenuRight == FALSE)
 				{
 					MenuStringLeft++;
@@ -1411,6 +1474,7 @@ VOID PlayProc(VOID)
 			//上
 			else if (KeyClick(KEY_INPUT_UP))
 			{
+				PlayAudio(cursorSE);
 				if (MenuRight == FALSE)
 				{
 					MenuStringLeft--;
@@ -1440,7 +1504,7 @@ VOID PlayProc(VOID)
 					&& CraftingItemMenu[MenuStringLeft].Metal <= GetMainItemMenu[2].Cnt
 					&& CraftingItemMenu[MenuStringLeft].Cnt == 0)
 				{
-					
+					PlayAudio(enterSE);
 						{
 							//文字列コピー
 							strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
@@ -1465,7 +1529,10 @@ VOID PlayProc(VOID)
 							CraftingItemCnt++;
 						}
 				}
-				
+				else
+				{
+					PlayAudio(beepSE);
+				}
 			}
 		}
 	}
@@ -1826,6 +1893,31 @@ VOID BattleProc()
 		return;
 	}
 
+	if (PlayerTurn == FALSE && EnemyTurn == FALSE)
+	{
+		if (KeyClick(KEY_INPUT_UP) || KeyClick(KEY_INPUT_DOWN))
+		{
+			BattleMenuUp=!BattleMenuUp;
+			PlayAudio(cursorSE);
+		}
+		if (KeyClick(KEY_INPUT_LEFT) || KeyClick(KEY_INPUT_RIGHT))
+		{
+			BattleMenuLeft=!BattleMenuLeft;
+			PlayAudio(cursorSE);
+		}
+
+		if (BattleMenuUp)
+		{
+			if(BattleMenuLeft){BattlePlayCmd = 0;}
+			else{BattlePlayCmd = 1;}
+		}
+		else
+		{
+			if (BattleMenuLeft){BattlePlayCmd = 2;}
+			else{BattlePlayCmd = 3;}
+		}
+	}
+
 	if (KeyClick(KEY_INPUT_Z))
 	{
 		if (PlayChara.HP <= 0)
@@ -1862,7 +1954,12 @@ VOID BattleProc()
 			return;
 		}
 
-		if (PlayerTurn == TRUE && PlayerResult == TRUE)
+
+		if (MPsmall == TRUE)
+		{
+			MPsmall = FALSE;
+		}
+		else if (PlayerTurn == TRUE && PlayerResult == TRUE)
 		{
 			PlayerTurn = FALSE;
 			PlayerResult = FALSE;
@@ -1884,26 +1981,84 @@ VOID BattleProc()
 		}
 		else if (PlayerTurn == FALSE && EnemyTurn == FALSE)
 		{
-			PlayerTurn = TRUE;
+			if (PlayChara.MP >= PlayChara.cmd[BattlePlayCmd].cost)
+				PlayerTurn = TRUE;
+			else
+			{
+				MPsmall = TRUE;
+				PlayAudio(beepSE);
+			}
+		}
+
+		if (PlayerTurn && !PlayerResult)
+		{
+			switch (BattlePlayCmd)
+			{
+			case 0:
+				PlayAudio(BattleSE[1]);
+				break;
+			case 1:
+				PlayAudio(BattleSE[3]);
+				break;
+			case 2:
+				PlayAudio(BattleSE[4]);
+				break;
+			case 3:
+				PlayAudio(BattleSE[5]);
+				break;
+			}
+		}
+		if (EnemyTurn && !EnemyResult)
+		{
+			if ((turn + 1) % 3 == 0)
+			{
+				PlayAudio(BattleSE[2]);
+			}
+			else
+			{
+				PlayAudio(BattleSE[1]);
+			}
 		}
 
 		if (PlayerResult == TRUE)
 		{
-			Damage = PlayChara.ATK - Battleenemy[0].DEF;
-			if(Damage<0)
+			if (PlayChara.cmd[BattlePlayCmd].Myself == FALSE)
 			{
-				Damage = 0;
+				Damage = PlayChara.ATK * PlayChara.cmd[BattlePlayCmd].DamageMultiplier - Battleenemy[0].DEF;
+				PlayChara.MP -= PlayChara.cmd[BattlePlayCmd].cost;
+				if (Damage < 1)
+				{
+					Damage = 0;
+				}
+				Battleenemy[0].HP -= Damage;
+				if (Battleenemy[0].HP < 0)
+				{
+					Battleenemy[0].HP = 0;
+				}
+				PlayAudio(BattleSE[0]);
 			}
-			Battleenemy[0].HP -= Damage;
-			if (Battleenemy[0].HP < 0)
+			else
 			{
-				Battleenemy[0].HP = 0;
+				Damage = PlayChara.ATK * PlayChara.cmd[BattlePlayCmd].DamageMultiplier;
+				PlayChara.MP -= PlayChara.cmd[BattlePlayCmd].cost;
+				PlayChara.HP += Damage;
+				if (PlayChara.HP > PlayChara.MAX_HP)
+				{
+					Damage -= PlayChara.HP - PlayChara.MAX_HP;
+					PlayChara.HP = PlayChara.MAX_HP;
+				}
 			}
 		}
 		if (EnemyResult == TRUE)
 		{
-			Battleenemy[0].MP-=2;
-			Damage = Battleenemy[0].ATK - PlayChara.DEF;
+			if ((turn + 1) % 3 == 0)
+			{
+				Damage = Battleenemy[0].ATK * 2 - PlayChara.DEF;
+			}
+			else
+			{
+				Damage = Battleenemy[0].ATK - PlayChara.DEF;
+			}
 			if (Damage < 0)
 			{
 				Damage = 0;
@@ -1913,6 +2068,7 @@ VOID BattleProc()
 			{
 				PlayChara.HP = 0;
 			}
+			PlayAudio(BattleSE[0]);
 		}
 	}
 
@@ -1959,6 +2115,7 @@ VOID BattleDraw()
 	DrawString(190, GAME_HEIGHT - 85, "MP", GetColor(0, 0, 200), FALSE);
 	DrawFormatString(220, GAME_HEIGHT - 85, GetColor(0, 0, 0), "%2d/%2d", PlayChara.MP, PlayChara.MAX_MP);
 
+	//技とかのウィンドウ
 	DrawBox(495, GAME_HEIGHT - 145, GAME_WIDTH - 205, GAME_HEIGHT - 55, GetColor(200, 200, 200), TRUE);
 
 	DrawBox(280, GAME_HEIGHT - 150 + 10, 480, GAME_HEIGHT - 150 + 40, GetColor(150, 150, 150), TRUE);
@@ -1967,7 +2124,35 @@ VOID BattleDraw()
 	DrawBox(280, GAME_HEIGHT - 150 + 60, 480, GAME_HEIGHT - 150 + 90, GetColor(150, 150, 150), TRUE);
 	DrawBox(280, GAME_HEIGHT - 150 + 60, 280 + ((PlayChara.MP * 100 / PlayChara.MAX_MP) * 2), GAME_HEIGHT - 150 + 90, GetColor(0, 0, 255), TRUE);
 
+	//技表示
+	if (!PlayerTurn && !EnemyTurn)
+	{
+		if (!MPsmall)
+		{
+			if (BattlePlayCmd == 0)
+				DrawFormatString(520, GAME_HEIGHT - 130, GetColor(150, 150, 150), "%s", PlayChara.cmd[0].Name);
+			else
+				DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s", PlayChara.cmd[0].Name);
+			if (BattlePlayCmd == 1)
+				DrawFormatString(800, GAME_HEIGHT - 130, GetColor(150, 150, 150), "%s", PlayChara.cmd[1].Name);
+			else
+				DrawFormatString(800, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s", PlayChara.cmd[1].Name);
+			if (BattlePlayCmd == 2)
+				DrawFormatString(520, GAME_HEIGHT - 85, GetColor(150, 150, 150), "%s", PlayChara.cmd[2].Name);
+			else
+				DrawFormatString(520, GAME_HEIGHT - 85, GetColor(0, 0, 0), "%s", PlayChara.cmd[2].Name);
+			if (BattlePlayCmd == 3)
+				DrawFormatString(800, GAME_HEIGHT - 85, GetColor(150, 150, 150), "%s", PlayChara.cmd[3].Name);
+			else
+				DrawFormatString(800, GAME_HEIGHT - 85, GetColor(0, 0, 0), "%s", PlayChara.cmd[3].Name);
+		}
+		else
+			DrawString(520, GAME_HEIGHT - 130, "MPが足りません", GetColor(0, 0, 0), FALSE);
+	}
+
+
 	//ログ表示
+	/*
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
 	DrawBox(GAME_WIDTH - 350, 10, GAME_WIDTH - 50, 110, GetColor(200, 200, 200), TRUE);
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
@@ -1976,11 +2161,16 @@ VOID BattleDraw()
 	{
 		DrawString(GAME_WIDTH - 340, 80 - (i * 20), BattleLog[i], GetColor(150, 150, 150));
 	}
-
+	*/
 	if (PlayerTurn)
-		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s のこうげき！",PlayChara.Name);
-	if(PlayerResult)
-		DrawFormatString(520, GAME_HEIGHT - 110, GetColor(0, 0, 0), "%s に %d ダメージ！",Battleenemy[0].Name,Damage);
+		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s の %s！",PlayChara.Name,PlayChara.cmd[BattlePlayCmd].Name);
+	if (PlayerResult)
+	{
+		if(!PlayChara.cmd[BattlePlayCmd].Myself)
+			DrawFormatString(520, GAME_HEIGHT - 110, GetColor(0, 0, 0), "%s に %d ダメージ！", Battleenemy[0].Name, Damage);
+		else
+			DrawFormatString(520, GAME_HEIGHT - 110, GetColor(0, 0, 0), "%s に %d 回復！", Battleenemy[0].Name, Damage);
+	}
 	if (EnemyTurn)
 		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s のこうげき！", Battleenemy[0].Name);
 	if(EnemyResult)
@@ -2814,4 +3004,14 @@ VOID StatusUpdate(MENU tool)
 	PlayChara.MP = PlayChara.MAX_MP;
 	PlayChara.ATK = PlayChara.MAX_ATK;
 	PlayChara.DEF = PlayChara.MAX_DEF;
+}
+
+VOID SetCharaCmd(CHARA_CMD* cmd, const char name[255], int cost, float multi, BOOL myself)
+{
+	strcpyDx(cmd->Name, name);
+	cmd->cost = cost;
+	cmd->DamageMultiplier = multi;
+	cmd->Myself = myself;
+
+	return;
 }

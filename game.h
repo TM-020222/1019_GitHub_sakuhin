@@ -153,6 +153,18 @@ struct MENU
 
 	BOOL can = FALSE;
 };
+
+struct CHARA_CMD
+{
+	char Name[255];	//技の名前
+
+	int cost = -1;	//技のコスト
+
+	float DamageMultiplier = -1;	//技のダメージ係数
+
+	BOOL Myself = FALSE;	//技の対象が自分か
+};
+
 //########## 外部のグローバル変数 ##########
 extern DIVIMAGE samplePlayerImg;
 

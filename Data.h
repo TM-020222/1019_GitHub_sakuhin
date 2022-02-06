@@ -99,6 +99,8 @@ struct CHARA_DATA
 	int DEFAULT_MP;			//‰Šú’l
 	int DEFAULT_ATK;		//‰Šú’l
 	int DEFAULT_DEF;		//‰Šú’l
+
+	CHARA_CMD cmd[4] = { NULL,NULL,NULL,NULL };
 };
 
 struct SCORE_DATA
