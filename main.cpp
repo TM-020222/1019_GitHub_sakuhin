@@ -53,6 +53,14 @@ const float GameTimeLimitMax=60;
 
 
 //独自のグローバル変数
+//チュートリアルの文の格納
+char TutorialString[16][255];
+
+//チュートリアルの文の量
+int TutorialCnt;
+int TutorialCntMax;
+BOOL TutorialSkip;
+
 int MenuStringLeft;
 int MenuStringRight;
 BOOL ShiftDownSpeedUp;
@@ -86,6 +94,7 @@ VOID GameInit(VOID);	//データの初期化
 VOID GameDelete(VOID);	//データを削除
 
 VOID TitleInit(VOID);
+VOID TutorialInit(VOID);
 VOID PlayInit(VOID);
 VOID BattleInit(VOID);
 VOID EndInit(VOID);
@@ -94,6 +103,10 @@ VOID GameOverInit(VOID);
 VOID Title(VOID);		//タイトル画面
 VOID TitleProc(VOID);	//タイトル画面(処理)
 VOID TitleDraw(VOID);	//タイトル画面(描画)
+
+VOID Tutorial(VOID);		//チュートリアル(操作説明)
+VOID TutorialProc(VOID);	//チュートリアル(操作説明)(処理)
+VOID TutorialDraw(VOID);	//チュートリアル(操作説明)(描画)
 
 VOID Play(VOID);		//プレイ画面
 VOID PlayProc(VOID);	//プレイ画面(処理)
@@ -288,6 +301,9 @@ int WINAPI WinMain(
 		{
 		case GAME_SCENE_TITLE:
 			Title();			//タイトル画面
+			break;
+		case GAME_SCENE_TUTORIAL:
+			Tutorial();			//タイトル画面
 			break;
 		case GAME_SCENE_PLAY:
 			Play();				//プレイ画面
@@ -535,6 +551,29 @@ VOID TitleInit(VOID)
 	PlayChara.MP = PlayChara.MAX_MP;
 	PlayChara.ATK = PlayChara.MAX_ATK;
 	PlayChara.DEF = PlayChara.MAX_DEF;
+
+	return;
+}
+
+VOID TutorialInit(VOID)
+{
+	TutorialCnt = 0;
+	TutorialCntMax = 12;
+
+	TutorialSkip = FALSE;
+
+	strcpyDx(TutorialString[0], "チュートリアルをスキップしますか？");
+	strcpyDx(TutorialString[1], "");
+	strcpyDx(TutorialString[2], "[Z]:決定、[X]:キャンセル,メニュー、[SHIFT]:ダッシュ");
+	strcpyDx(TutorialString[3], "[W,A,S,D]:上下左右移動、[矢印キー]:選択肢の移動");
+	strcpyDx(TutorialString[4], "マップ右上側で素材の採取");
+	strcpyDx(TutorialString[5], "マップ中央付近で素材を消費してのクラフトができます");
+	strcpyDx(TutorialString[6], "クラフトすることでステータスが上昇します");
+	strcpyDx(TutorialString[7], "採取回数が０になったら戦闘へ移行します");
+	strcpyDx(TutorialString[8], "戦闘に勝てばゲームクリア");
+	strcpyDx(TutorialString[9], "戦闘に負けるとゲームオーバーです");
+	strcpyDx(TutorialString[10], "それでは行ってらっしゃいませ");
+	strcpyDx(TutorialString[11], "");
 
 	return;
 }
@@ -800,10 +839,10 @@ VOID TitleProc(VOID)
 
 		//ゲームの初期化
 		GameInit();
-		PlayInit();
+		TutorialInit();
 
 		//プレイ画面に切り替え
-		ChangeScene(GAME_SCENE_PLAY);
+		ChangeScene(GAME_SCENE_TUTORIAL);
 
 		return;
 	}
@@ -823,6 +862,117 @@ VOID TitleDraw(VOID)
 	DrawImage(PushEnter);
 
 	if(GAME_DEBUG)DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
+	return;
+}
+
+/// <summary>
+/// チュートリアル画面
+/// </summary>
+VOID Tutorial(VOID)
+{
+	TutorialProc();	//処理
+	TutorialDraw();	//描画
+
+	return;
+}
+
+/// <summary>
+/// チュートリアル画面の処理
+/// </summary>
+VOID TutorialProc(VOID)
+{
+	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	{
+		//シーン切り替え
+		//次のシーンの初期化をここで行うと楽
+
+		//SEを流す
+		PlayAudio(sceneEnterSE);
+
+		//ゲームの初期化
+		GameInit();
+		PlayInit();
+
+		//プレイ画面に切り替え
+		ChangeScene(GAME_SCENE_PLAY);
+
+		return;
+	}
+
+	if (TutorialCnt == 0)
+	{
+		if (KeyClick(KEY_INPUT_LEFT) || KeyClick(KEY_INPUT_RIGHT))
+		{
+			PlayAudio(cursorSE);
+			TutorialSkip = !TutorialSkip;
+		}
+	}
+
+	if (KeyClick(KEY_INPUT_Z))
+	{
+		if (TutorialCnt >= TutorialCntMax - 2 || TutorialSkip)
+		{
+			//シーン切り替え
+			//次のシーンの初期化をここで行うと楽
+
+			//SEを流す
+			PlayAudio(sceneEnterSE);
+
+			//ゲームの初期化
+			GameInit();
+			PlayInit();
+
+			//プレイ画面に切り替え
+			ChangeScene(GAME_SCENE_PLAY);
+
+			return;
+		}
+		else
+		{
+			PlayAudio(enterSE);
+			TutorialCnt += 2;
+		}
+	}
+
+	return;
+}
+
+/// <summary>
+/// チュートリアル画面の描画
+/// </summary>
+VOID TutorialDraw(VOID)
+{
+	//背景
+	DrawBox(0, 0, GAME_WIDTH, GAME_HEIGHT, GetColor(0, 0, 0),TRUE);
+
+	//メッセージウィンドウ
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
+	DrawBox(175, GAME_HEIGHT - 155, GAME_WIDTH - 195, GAME_HEIGHT - 45, GetColor(230, 230, 230), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+	DrawBox(180, GAME_HEIGHT - 150, GAME_WIDTH - 200, GAME_HEIGHT - 50, GetColor(230, 230, 230), TRUE);
+
+	//本文
+	DrawString(200, GAME_HEIGHT - 130, TutorialString[TutorialCnt], GetColor(0, 0, 0), FALSE);
+	DrawString(200, GAME_HEIGHT - 110, TutorialString[TutorialCnt + 1], GetColor(0, 0, 0), FALSE);
+
+	if (TutorialCnt == 0)
+	{
+		if (TutorialSkip)
+		{
+			DrawString(240, GAME_HEIGHT - 90, "いいえ", GetColor(0, 0, 0), FALSE);
+			DrawString(380, GAME_HEIGHT - 90, "→", GetColor(0, 0, 0), FALSE);
+			DrawString(400, GAME_HEIGHT - 90, "はい", GetColor(100, 100, 100), FALSE);
+		}
+		else
+		{
+			DrawString(240, GAME_HEIGHT - 90, "いいえ", GetColor(100, 100, 100), FALSE);
+			DrawString(220, GAME_HEIGHT - 90, "→", GetColor(0, 0, 0), FALSE);
+			DrawString(400, GAME_HEIGHT - 90, "はい", GetColor(0, 0, 0), FALSE);
+		}
+	}
+
+	if (GAME_DEBUG)DrawString(0, 0, "チュートリアル画面", GetColor(0, 0, 0));
+
 	return;
 }
 
@@ -2046,6 +2196,9 @@ VOID ChangeDraw(VOID)
 	{
 	case GAME_SCENE_TITLE:
 		TitleDraw();	//タイトル画面の描画
+		break;
+	case GAME_SCENE_TUTORIAL:
+		TutorialDraw();	//タイトル画面の描画
 		break;
 	case GAME_SCENE_PLAY:
 		PlayDraw();		//プレイ画面の描画
