@@ -55,6 +55,7 @@ const float GameTimeLimitMax=60;
 //独自のグローバル変数
 int MenuStringLeft;
 int MenuStringRight;
+BOOL ShiftDownSpeedUp;
 
 //コンフィグ関連
 
@@ -541,11 +542,10 @@ VOID TitleInit(VOID)
 VOID PlayInit(VOID)
 {
 	//サンプルプレイヤー初期化
-	samplePlayerImg.speed = 9;
+	samplePlayerImg.speed = 4;
 	samplePlayerImg.x = 20;
 	samplePlayerImg.y = 10;
-	//samplePlayerImg.x = MAP1_YOKO_MAX * map2.width / 2 - samplePlayerImg.width / 2;
-	//samplePlayerImg.y = MAP1_TATE_MAX * map2.height / 2 - samplePlayerImg.height / 2;
+	ShiftDownSpeedUp = FALSE;
 
 	muki = muki_none;
 
@@ -904,6 +904,23 @@ VOID PlayProc(VOID)
 	//メニューを開いていない(通常時)時
 	if (MenuScreen == FALSE)
 	{
+		if (KeyDown(KEY_INPUT_LSHIFT) || KeyDown(KEY_INPUT_RSHIFT))
+		{
+			if (!ShiftDownSpeedUp)
+			{
+				ShiftDownSpeedUp = TRUE;
+				samplePlayerImg.speed *= 2;
+			}
+		}
+		else
+		{
+			if (ShiftDownSpeedUp)
+			{
+				ShiftDownSpeedUp = FALSE;
+				samplePlayerImg.speed /= 2;
+			}
+		}
+
 		//マップの当たり判定
 		{
 			muki = muki_none;					//最初は向きなし
