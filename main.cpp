@@ -53,30 +53,18 @@ const float GameTimeLimitMax=60;
 
 
 //独自のグローバル変数
-
-int ItemWood;
-int ItemStone;
-
-BOOL canGetItem;
-
-
 int MenuStringLeft;
 int MenuStringRight;
 
 //コンフィグ関連
 
 //メニュー画面のサンプル
-MENU sampleGetItemMenu[4];
-int sampleGetItemMenuCnt;
-
 MENU GetMainItemMenu[MAIN_ITEM_KIND];
 int GetMainItemCnt;
 
 MENU GetCraftingItemMenu[CRAFTING_ITEM_KIND];	//インベントリ
 MENU CraftingItemMenu[CRAFTING_ITEM_KIND];		//クラフト画面
 int CraftingItemCnt;							//メニューのカウント
-
-MENU DrawConfig;
 
 int Volumecfg = 0;
 BOOL OpenVolumecfg;
@@ -149,12 +137,6 @@ VOID DrawHitBox(EVENT* events);					//イベントの当たり判定の描画
 
 VOID ItemEventInit(EVENT* events, int Wood, int Stone, int CntMax);	//アイテム初期化
 
-VOID CreateItem(EVENT* events);					//アイテム作成
-VOID CreateItemDraw(EVENT* events);				//アイテム作成時の必要数表示
-
-VOID GetItemSystem(EVENT* events, EVENT* tools);				//採取の個数変動
-VOID GetItemDraw(EVENT* events);				//採取時の個数表示
-
 VOID SetEventUpdate();							//イベントの場所更新
 VOID StatusUpdate(MENU tool);					//ステータスの変動用
 VOID SetCharaCmd(CHARA_CMD* cmd,const char name[255],int cost,float multi,BOOL myself);		//技の設定
@@ -190,20 +172,7 @@ MAP_DATA map1;
 MAP_DATA map2;
 
 //イベントマス
-EVENT sampleevent;
-
-EVENT CreatePickaxe;
-EVENT CreateAxe;
-EVENT CreateKey;
-
-EVENT GetItem;
-EVENT GetWood;
-EVENT GetStone;
-
-EVENT Goal;
-
 EVENT CreateItems;
-EVENT sampleGetItem[4];
 
 EVENT GetMainItem[MAIN_ITEM_KIND];	//石、木材、金属
 
@@ -590,29 +559,7 @@ VOID PlayInit(VOID)
 	GameTimeLimit = GameTimeLimitMax;
 
 	//アイテムの個数の初期化
-	ItemWood = 0;
-	ItemStone = 0;
-
-	canGetItem = TRUE;
-
-	ItemEventInit(&GetItem,1,1,NULL);
-	ItemEventInit(&GetWood,5,0,NULL);
-	ItemEventInit(&GetStone,0,5,NULL);
-
-	ItemEventInit(&CreatePickaxe, 1, 2, 1);
-	ItemEventInit(&CreateAxe, 1, 3, 1);
-	ItemEventInit(&CreateKey, 10, 10, 1);
 	ItemEventInit(&CreateItems, 0, 0, NULL);
-
-	strcpyDx(sampleGetItem[0].string, "アイテムてすと1");
-	strcpyDx(sampleGetItem[1].string, "アイテムてすと2");
-	strcpyDx(sampleGetItem[2].string, "アイテムてすと3");
-	strcpyDx(sampleGetItem[3].string, "アイテムてすと4");
-
-	for (int i = 0; i < 4; i++)
-	{
-		sampleGetItemMenu[i].Cnt = 0;
-	}
 
 	//メニューを開いていない
 	MenuScreen = FALSE;
@@ -626,11 +573,6 @@ VOID PlayInit(VOID)
 	//コンフィグを初期化
 
 	OpenVolumecfg = FALSE;
-
-	//項目増やすテストのやつの初期化
-	strcpyDx(DrawConfig.string, "表示数");
-	DrawConfig.Cnt = 1;
-	DrawConfig.can = FALSE;
 
 	//イベントの初期化
 	for (int i = 0; i < MAIN_ITEM_KIND; i++)
@@ -704,7 +646,6 @@ VOID PlayInit(VOID)
 	}
 
 	//取得したアイテムの種類の個数の初期化
-	sampleGetItemMenuCnt = 0;
 	GetMainItemCnt = 0;
 	CraftingItemCnt = 0;
 
@@ -808,26 +749,11 @@ VOID SetEventUpdate()
 {
 	//イベント
 	{
-		CreateEventMass(3, 9, &CreatePickaxe, map2);
-		CreateEventMass(16, 9, &CreateAxe, map2);
-		CreateEventMass(16, 4, &CreateKey, map2);
 		CreateEventMass(41, 29, &CreateItems, map2);
-
-		CreateEventMultiMass(8, 15, 12, 18, &GetItem, map2);
-		CreateEventMultiMass(2, 16, 4, 18, &GetWood, map2);
-		CreateEventMultiMass(16, 16, 19, 18, &GetStone, map2);
-
-		CreateEventMultiMass(9, 1, 11, 2, &Goal, map2);
-
-		for (int i = 0; i < 4; i++)
-		{
-			CreateEventMass(15 + 3 * i, 38 + 3 * i, &sampleGetItem[i], map2);
-		}
 
 		CreateEventMultiMass(46, 8, 49, 9, &GetMainItem[0], map2);
 		CreateEventMultiMass(41, 8, 43, 9, &GetMainItem[1], map2);
 		CreateEventMultiMass(53, 9, 55, 10, &GetMainItem[2], map2);
-
 	}
 }
 
@@ -860,27 +786,6 @@ VOID Title(VOID)
 /// </summary>
 VOID TitleProc(VOID)
 {
-	//セーブデータ系サンプル
-	{
-		//セーブデータ削除サンプル
-		if (KeyDown(KEY_INPUT_Q)) { DeleteScoreData(); }
-
-		//セーブデータ保存サンプル
-		if (KeyDown(KEY_INPUT_E))
-		{
-			//スコアデータを設定
-			score_data.Score1 = (int)GetGameTime();
-			strcpyDx(score_data.Name1, "Taro");
-			strcpyDx(score_data.Name2, "Jiro");
-			strcpyDx(score_data.Name3, "Saburo");
-
-			//スコアデータの並び替え
-
-			//スコアデータ保存
-			SaveScoreData();
-		}
-	}
-
 	CollUpdateImage(&TitleLogo);
 
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
@@ -960,10 +865,6 @@ VOID PlayProc(VOID)
 
 		return;
 	}
-
-	
-
-
 	
 	//Xを押したときの関数反転 + a
 	if (KeyClick(KEY_INPUT_X))
@@ -971,11 +872,6 @@ VOID PlayProc(VOID)
 		if(OpenVolumecfg==TRUE)
 		{
 			OpenVolumecfg = FALSE;
-			PlayAudio(returnSE);
-		}
-		else if(DrawConfig.can==TRUE)
-		{
-			DrawConfig.can = FALSE;
 			PlayAudio(returnSE);
 		}
 		else if (MenuScreen == TRUE && MenuRight == FALSE && MenuScreenInventory==TRUE)
@@ -1164,35 +1060,6 @@ VOID PlayProc(VOID)
 				}
 			}
 
-			//イベントを配列で管理するサンプル
-			for (int i = 0; i < 4; i++)
-			{
-				if (CheckCollRectToRect(samplePlayerImg.coll, sampleGetItem[i].coll))
-				{
-					if (KeyClick(KEY_INPUT_Z))
-					{
-						for (int j = 0; j < 4; j++)
-						{
-							if (!strcmpDx(sampleGetItemMenu[j].string, sampleGetItem[i].string))
-							{
-								sampleGetItemMenu[j].Cnt++;
-								break;
-							}
-							else if (j == 3)
-							{
-								//文字列コピー
-								strcpyDx(sampleGetItemMenu[sampleGetItemMenuCnt].string, sampleGetItem[i].string);
-								sampleGetItemMenu[sampleGetItemMenuCnt].Cnt++;
-								sampleGetItemMenuCnt++;
-								break;
-							}
-						}
-
-						
-					}
-				}
-			}
-
 			//素材アイテム入手
 			for (int i = 0; i < MAIN_ITEM_KIND; i++)
 			{
@@ -1213,13 +1080,9 @@ VOID PlayProc(VOID)
 								break;
 							}
 						}
-
-						
 					}
 				}
 			}
-
-
 		}
 
 		if (GetItemCnt == GetItemCntMax)
@@ -1270,81 +1133,14 @@ VOID PlayProc(VOID)
 			//左の項目を上限を超えて上に行ったとき(のちにdefine化)
 			if (MenuStringLeft < 0)
 			{
-				MenuStringLeft = 7;
+				MenuStringLeft = 3;
 			}
 			//左の項目を上限を超えて下に行ったとき
-			else if (MenuStringLeft > 7)
+			else if (MenuStringLeft > 3)
 			{
 				MenuStringLeft = 0;
 			}
-			//左の一項目目の時
-			if (MenuStringLeft == GAME_MENU_TEST1)
-			{
-				//右
-				//↑上限超えたら(個別にdefine用意推奨)
-				if (MenuStringRight < 0)
-				{
-					MenuStringRight = 2;
-				}
-				//↓上限超えたら
-				else if (MenuStringRight > 2)
-				{
-					MenuStringRight = 0;
-				}
-			}
-			//左の二項目目の時
-			if (MenuStringLeft == GAME_MENU_TEST2)
-			{
-				//右
-				if (MenuStringRight < 0)
-				{
-					MenuStringRight = 2;
-				}
-				else if (MenuStringRight > 2)
-				{
-					MenuStringRight = 0;
-				}
-			}
-			//左の三項目目の時
-			if (MenuStringLeft == GAME_MENU_TEST3)
-			{
-				//右
-				if (MenuStringRight < 0)
-				{
-					MenuStringRight = 2;
-				}
-				else if (MenuStringRight > 2)
-				{
-					MenuStringRight = 0;
-				}
-			}
-			if (MenuStringLeft == GAME_MENU_TEST4)
-			{
-				//右
-				//試験的にバーで項目数を増やせるように
-				if (MenuStringRight < 0)
-				{
-					MenuStringRight = DrawConfig.Cnt - 1;
-				}
-				else if (MenuStringRight > DrawConfig.Cnt - 1)
-				{
-					MenuStringRight = 0;
-				}
-			}
-			//左の五項目目の時
-			if (MenuStringLeft == GAME_MENU_TEST5)
-			{
-				//右
-				if (MenuStringRight < 0)
-				{
-					MenuStringRight = sampleGetItemMenuCnt-1;
-				}
-				else if (MenuStringRight > sampleGetItemMenuCnt-1)
-				{
-					MenuStringRight = 0;
-				}
-			}
-			//左の六項目目の時
+			//左の1項目目の時
 			if (MenuStringLeft == GAME_MENU_MATERIAL)
 			{
 				//右
@@ -1357,7 +1153,7 @@ VOID PlayProc(VOID)
 					MenuStringRight = 0;
 				}
 			}
-			//左の七項目目の時
+			//左の2項目目の時
 			if (MenuStringLeft == GAME_MENU_CRAFTITEM)
 			{
 				//右
@@ -1370,8 +1166,13 @@ VOID PlayProc(VOID)
 					MenuStringRight = 0;
 				}
 			}
-			//左の八項目目の時(見るようなので動きなし)
+			//左の3項目目の時(見るようなので動きなし)
 			if (MenuStringLeft == GAME_MENU_STATUS)
+			{
+
+			}
+			//左の4項目目の時
+			if (MenuStringLeft == GAME_MENU_CONFIG)
 			{
 
 			}
@@ -1389,33 +1190,15 @@ VOID PlayProc(VOID)
 				//右項目にいるとき
 				else
 				{
-
 					PlayAudio(enterSE);
-					//三行目
-					if (MenuStringLeft == 2)
+					//4行目
+					if (MenuStringLeft == GAME_MENU_CONFIG)
 					{
-						//三行目
-						if (MenuStringRight == 2)
-						{
-							//決定を押したときにBOOL型を反転
-							if (OpenVolumecfg == FALSE)
-								OpenVolumecfg = TRUE;
-							else
-								OpenVolumecfg = FALSE;
-						}
-					}
-					//四行目
-					if (MenuStringLeft == 3)
-					{
-						//一行目
-						if (MenuStringRight == 0)
-						{
-							//決定を押したときにBOOL型を反転
-							if (DrawConfig.can == FALSE)
-								DrawConfig.can = TRUE;
-							else
-								DrawConfig.can = FALSE;
-						}
+						//決定を押したときにBOOL型を反転
+						if (OpenVolumecfg == FALSE)
+							OpenVolumecfg = TRUE;
+						else
+							OpenVolumecfg = FALSE;
 					}
 				}
 			}
@@ -1436,24 +1219,6 @@ VOID PlayProc(VOID)
 					Volumecfg = 0;
 				else if (Volumecfg > 255)
 					Volumecfg = 255;
-			}
-
-			//項目増やすテスト
-			if (DrawConfig.can == TRUE)
-			{
-				if (KeyClick(KEY_INPUT_LEFT))
-				{
-					DrawConfig.Cnt--;
-				}
-				else if (KeyClick(KEY_INPUT_RIGHT))
-				{
-					DrawConfig.Cnt++;
-				}
-
-				if (DrawConfig.Cnt < 0)
-					DrawConfig.Cnt = 0;
-				else if (DrawConfig.Cnt > 255)
-					DrawConfig.Cnt = 255;
 			}
 		}
 		//クラフト画面
@@ -1505,29 +1270,29 @@ VOID PlayProc(VOID)
 					&& CraftingItemMenu[MenuStringLeft].Cnt == 0)
 				{
 					PlayAudio(enterSE);
-						{
-							//文字列コピー
-							strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
-							GetCraftingItemMenu[CraftingItemCnt].Cnt++;
-							CraftingItemMenu[MenuStringLeft].Cnt++;
+					{
+						//文字列コピー
+						strcpyDx(GetCraftingItemMenu[CraftingItemCnt].string, CraftingItemMenu[MenuStringLeft].string);
+						GetCraftingItemMenu[CraftingItemCnt].Cnt++;
+						CraftingItemMenu[MenuStringLeft].Cnt++;
 
-							//素材消費
-							GetMainItemMenu[0].Cnt -= CraftingItemMenu[MenuStringLeft].Wood;
-							GetMainItemMenu[1].Cnt -= CraftingItemMenu[MenuStringLeft].Stone;
-							GetMainItemMenu[2].Cnt -= CraftingItemMenu[MenuStringLeft].Metal;
+						//素材消費
+						GetMainItemMenu[0].Cnt -= CraftingItemMenu[MenuStringLeft].Wood;
+						GetMainItemMenu[1].Cnt -= CraftingItemMenu[MenuStringLeft].Stone;
+						GetMainItemMenu[2].Cnt -= CraftingItemMenu[MenuStringLeft].Metal;
 
-							//ステータスを移動
-							GetCraftingItemMenu[CraftingItemCnt].HP = CraftingItemMenu[MenuStringLeft].HP;
-							GetCraftingItemMenu[CraftingItemCnt].MP = CraftingItemMenu[MenuStringLeft].MP;
-							GetCraftingItemMenu[CraftingItemCnt].ATK = CraftingItemMenu[MenuStringLeft].ATK;
-							GetCraftingItemMenu[CraftingItemCnt].DEF = CraftingItemMenu[MenuStringLeft].DEF;
+						//ステータスを移動
+						GetCraftingItemMenu[CraftingItemCnt].HP = CraftingItemMenu[MenuStringLeft].HP;
+						GetCraftingItemMenu[CraftingItemCnt].MP = CraftingItemMenu[MenuStringLeft].MP;
+						GetCraftingItemMenu[CraftingItemCnt].ATK = CraftingItemMenu[MenuStringLeft].ATK;
+						GetCraftingItemMenu[CraftingItemCnt].DEF = CraftingItemMenu[MenuStringLeft].DEF;
 
-							//ステ変動
-							StatusUpdate(GetCraftingItemMenu[CraftingItemCnt]);
+						//ステ変動
+						StatusUpdate(GetCraftingItemMenu[CraftingItemCnt]);
 
-							//ツールの種類プラス
-							CraftingItemCnt++;
-						}
+						//ツールの種類プラス
+						CraftingItemCnt++;
+					}
 				}
 				else
 				{
@@ -1547,23 +1312,6 @@ VOID PlayDraw(VOID)
 	//マップのサンプル
 	DrawMap(map2);
 
-	//当たり判定の描画
-	//DrawHitBox(&sampleevent);
-
-	//DrawHitBox(&CreatePickaxe);
-	//DrawHitBox(&CreateAxe);
-	//DrawHitBox(&CreateKey);
-
-	//DrawHitBox(&GetItem);
-	//DrawHitBox(&GetWood);
-	//DrawHitBox(&GetStone);
-
-	//DrawHitBox(&Goal);
-
-	//サンプル
-	DrawHitBox(&CreateItems);
-	for (int i = 0; i < 4; i++) { DrawHitBox(&sampleGetItem[i]); }
-
 	for (int i = 0; i < MAIN_ITEM_KIND; i++) { DrawHitBox(&GetMainItem[i]); }
 
 
@@ -1573,16 +1321,6 @@ VOID PlayDraw(VOID)
 	DrawBox(930, GAME_HEIGHT - 90, GAME_WIDTH, GAME_HEIGHT, GetColor(50, 50, 50), TRUE);
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 	DrawFormatStringToHandle(950, GAME_HEIGHT - 75, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3d回", GetItemCntMax - GetItemCnt);
-
-	//DrawFormatStringToHandle(650, 40, GetColor(0, 0, 0), sampleFont1.handle, "ピッケル:%d\n斧　　　:%d\n鍵　　　:%d\n\n木:%d　石:%d",CreatePickaxe.Cnt,CreateAxe.Cnt,CreateKey.Cnt,ItemWood,ItemStone);
-
-	//CreateItemDraw(&CreatePickaxe);
-	//CreateItemDraw(&CreateAxe);
-	//CreateItemDraw(&CreateKey);
-
-	//GetItemDraw(&GetItem);
-	//GetItemDraw(&GetWood);
-	//GetItemDraw(&GetStone);
 
 	if(MenuScreen==TRUE)
 	{
@@ -1603,46 +1341,25 @@ VOID PlayDraw(VOID)
 				DrawBox(GAME_WIDTH / 6 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH / 3 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(150, 150, 150), TRUE);
 			}
 
-
-			if (MenuStringLeft != GAME_MENU_TEST1)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(100, 100, 100), FALSE);
-			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "てすと1", GetColor(200, 200, 200), FALSE);
-
-			if (MenuStringLeft != GAME_MENU_TEST2)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "てすと2", GetColor(100, 100, 100), FALSE);
-			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "てすと2", GetColor(200, 200, 200), FALSE);
-
-			if (MenuStringLeft != GAME_MENU_TEST3)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(100, 100, 100), FALSE);
-			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "てすと3", GetColor(200, 200, 200), FALSE);
-
-			if (MenuStringLeft != GAME_MENU_TEST4)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "てすと4", GetColor(100, 100, 100), FALSE);
-			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "てすと4", GetColor(200, 200, 200), FALSE);
-
-			if (MenuStringLeft != GAME_MENU_TEST5)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 100, "てすと5", GetColor(100, 100, 100), FALSE);
-			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 100, "てすと5", GetColor(200, 200, 200), FALSE);
-
 			if (MenuStringLeft != GAME_MENU_MATERIAL)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 120, "素材アイテム", GetColor(100, 100, 100), FALSE);
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "素材アイテム", GetColor(100, 100, 100), FALSE);
 			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 120, "素材アイテム", GetColor(200, 200, 200), FALSE);
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 20, "素材アイテム", GetColor(200, 200, 200), FALSE);
 
 			if (MenuStringLeft != GAME_MENU_CRAFTITEM)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 140, "ツール", GetColor(100, 100, 100), FALSE);
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "ツール", GetColor(100, 100, 100), FALSE);
 			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 140, "ツール", GetColor(200, 200, 200), FALSE);
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 40, "ツール", GetColor(200, 200, 200), FALSE);
 
 			if (MenuStringLeft != GAME_MENU_STATUS)
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 160, "ステータス", GetColor(100, 100, 100), FALSE);
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "ステータス", GetColor(100, 100, 100), FALSE);
 			else
-				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 160, "ステータス", GetColor(200, 200, 200), FALSE);
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 60, "ステータス", GetColor(200, 200, 200), FALSE);
+
+			if (MenuStringLeft != GAME_MENU_CONFIG)
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "設定", GetColor(100, 100, 100), FALSE);
+			else
+				DrawString(GAME_WIDTH / 6 + 20, GAME_HEIGHT / 6 + 80, "設定", GetColor(200, 200, 200), FALSE);
 
 
 			//右ブロック
@@ -1653,84 +1370,6 @@ VOID PlayDraw(VOID)
 			else
 				DrawBox(GAME_WIDTH / 3 + 10, GAME_HEIGHT / 6 + 10, GAME_WIDTH * 5 / 6 - 10, GAME_HEIGHT * 5 / 6 - 10, GetColor(170, 170, 170), TRUE);
 
-			//右側の文字 汚いので要修正
-			if (MenuStringLeft == GAME_MENU_TEST1)
-			{
-				for (int i = 0; i < 3; i++)
-				{
-					//for文で表示させるテスト
-					if (MenuStringRight == i && MenuRight == TRUE)
-						DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(200, 200, 200), "てすと%d", i + 4);
-					else
-						DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(100, 100, 100), "てすと%d", i + 4);
-				}
-			}
-			if (MenuStringLeft == GAME_MENU_TEST2)
-			{
-				for (int i = 0; i < 3; i++)
-				{
-					//配列の関数を表示させるテスト
-					//エラー出るので削除
-				}
-
-			}
-			if (MenuStringLeft == GAME_MENU_TEST3)
-			{
-				if (MenuStringRight == 0 && MenuRight == TRUE)
-					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと10", GetColor(200, 200, 200), FALSE);
-				else
-					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "てすと10", GetColor(100, 100, 100), FALSE);
-
-				if (MenuStringRight == 1 && MenuRight == TRUE)
-					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "マップ拡大率", GetColor(200, 200, 200), FALSE);
-				else
-					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 40, "マップ拡大率", GetColor(100, 100, 100), FALSE);
-
-				if (MenuStringRight == 2 && MenuRight == TRUE)
-					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "音量", GetColor(200, 200, 200), FALSE);
-				else
-					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 60, "音量", GetColor(100, 100, 100), FALSE);
-
-
-
-				//音量調節のバー
-				if (OpenVolumecfg == TRUE)
-				{
-					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 80, GetColor(0, 0, 0), "%3d / 255", Volumecfg);
-					DrawBox(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GAME_WIDTH / 3 + 275, GAME_HEIGHT / 6 + 120, GetColor(0, 0, 0), TRUE);
-					DrawBox(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GAME_WIDTH / 3 + 20 + Volumecfg, GAME_HEIGHT / 6 + 120, GetColor(0, 0, 255), TRUE);
-				}
-
-			}
-
-			if (MenuStringLeft == GAME_MENU_TEST4)
-			{
-				for (int i = 0; i < DrawConfig.Cnt; i++)
-				{
-					if (MenuStringRight == i && MenuRight == TRUE)
-						DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), DrawConfig.string, GetColor(200, 200, 200), FALSE);
-					else
-						DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), DrawConfig.string, GetColor(100, 100, 100), FALSE);
-				}
-
-				if (DrawConfig.can == TRUE)
-				{
-					DrawFormatString(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 20, GetColor(0, 0, 0), "%3d / 255", DrawConfig.Cnt);
-					DrawBox(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 40, GAME_WIDTH / 3 + 475, GAME_HEIGHT / 6 + 60, GetColor(0, 0, 0), TRUE);
-					DrawBox(GAME_WIDTH / 3 + 220, GAME_HEIGHT / 6 + 40, GAME_WIDTH / 3 + 220 + DrawConfig.Cnt, GAME_HEIGHT / 6 + 60, GetColor(0, 0, 255), TRUE);
-				}
-			}
-			if (MenuStringLeft == GAME_MENU_TEST5)
-			{
-				//入手した順にアイテムを追加していくサンプル
-				for (int i = 0; i < sampleGetItemMenuCnt; i++)
-				{
-					if (MenuStringRight == i && MenuRight == TRUE)
-						DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(200, 200, 200), "%16s x%d", sampleGetItemMenu[i].string, sampleGetItemMenu[i].Cnt);
-					else
-						DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20 + (i * 20), GetColor(100, 100, 100), "%16s x%d", sampleGetItemMenu[i].string, sampleGetItemMenu[i].Cnt);
-				}
-			}
 			//素材アイテム表示
 			if (MenuStringLeft == GAME_MENU_MATERIAL)
 			{
@@ -1781,6 +1420,21 @@ VOID PlayDraw(VOID)
 				DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 120, GetColor(100, 100, 100), "DEF  : %d", PlayChara.DEF);
 			}
 
+			if (MenuStringLeft == GAME_MENU_CONFIG)
+			{
+				if (MenuStringRight == 2 && MenuRight == TRUE)
+					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "音量", GetColor(200, 200, 200), FALSE);
+				else
+					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "音量", GetColor(100, 100, 100), FALSE);
+
+				//音量調節のバー
+				if (OpenVolumecfg == TRUE)
+				{
+					DrawFormatString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 80, GetColor(0, 0, 0), "%3d / 255", Volumecfg);
+					DrawBox(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GAME_WIDTH / 3 + 275, GAME_HEIGHT / 6 + 120, GetColor(0, 0, 0), TRUE);
+					DrawBox(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 100, GAME_WIDTH / 3 + 20 + Volumecfg, GAME_HEIGHT / 6 + 120, GetColor(0, 0, 255), TRUE);
+				}
+			}
 		}
 		else if (MenuScreenCrafting == TRUE)
 		{
@@ -2873,49 +2527,6 @@ VOID DrawHitBox(EVENT* events)
 }
 
 /// <summary>
-/// アイテム作成
-/// </summary>
-VOID CreateItem(EVENT* events)
-{
-	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE && events->Cnt < events->CntMax)
-	{
-		events->can = TRUE;
-		if (KeyClick(KEY_INPUT_Z))
-		{
-			if (ItemWood >= events->Wood && ItemStone >= events->Stone)
-			{
-				ItemWood -= events->Wood;
-				ItemStone -= events->Stone;
-				events->Cnt++;
-			}
-		}
-	}
-	else
-	{
-		events->can = FALSE;
-	}
-
-	return;
-}
-
-/// <summary>
-/// クラフト時のアイテム必要個数の描画
-/// </summary>
-VOID CreateItemDraw(EVENT* events)
-{
-	//クラフト
-	{
-		if (events->can == TRUE)
-		{
-			DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
-				"クラフト必要個数\n木: %d / %d\n石: %d / %d", ItemWood, events->Wood, ItemStone, events->Stone);
-		}
-	}
-
-	return;
-}
-
-/// <summary>
 /// アイテム数の初期化(仮でアイテムと採取地点の関数同一化)
 /// </summary>
 /// <param name="events">イベントの関数</param>
@@ -2934,64 +2545,6 @@ VOID ItemEventInit(EVENT* events,int Wood,int Stone,int CntMax)
 	return;
 }
 
-/// <summary>
-/// 採取時のアイテムの加算(簡易)
-/// </summary>
-/// <param name="events">採取イベント</param>
-/// <param name="tools">必要ツールのイベント関数</param>
-VOID GetItemSystem(EVENT* events, EVENT* tools)
-{
-	if (CheckCollRectToRect(samplePlayerImg.coll, events->coll) == TRUE)
-	{
-		if (tools == NULL || tools->Cnt > 0)
-		{
-			events->can = TRUE;
-			canGetItem = TRUE;
-
-			if (KeyClick(KEY_INPUT_Z))
-			{
-				ItemWood += events->Wood;
-				ItemStone += events->Stone;
-			}
-		}
-		else
-		{
-			events->can = TRUE;
-			canGetItem = FALSE;
-		}
-	}
-	else
-	{
-		events->can = FALSE;
-	}
-
-	return;
-}
-
-/// <summary>
-/// 採取アイテム作成
-/// </summary>
-/// <param name="events">採取イベント</param>
-VOID GetItemDraw(EVENT* events)
-{
-	{
-		if (events->can == TRUE)
-		{
-			if (canGetItem == TRUE)
-			{
-				DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
-					"採取個数\n木: %d\n石: %d", events->Wood, events->Stone);
-			}
-			else
-			{
-				DrawFormatStringToHandle(900, 40, GetColor(0, 0, 0), sampleFont1.handle,
-					"採取不可");
-			}
-		}
-	}
-
-	return;
-}
 
 VOID StatusUpdate(MENU tool)
 {
