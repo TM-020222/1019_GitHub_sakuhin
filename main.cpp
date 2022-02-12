@@ -1174,7 +1174,15 @@ VOID PlayProc(VOID)
 			//左の4項目目の時
 			if (MenuStringLeft == GAME_MENU_CONFIG)
 			{
-
+				//右
+				if (MenuStringRight < 0)
+				{
+					MenuStringRight = 0;
+				}
+				else if (MenuStringRight > 0)
+				{
+					MenuStringRight = 0;
+				}
 			}
 
 			//決定ボタンを押したとき
@@ -1314,8 +1322,6 @@ VOID PlayDraw(VOID)
 
 	for (int i = 0; i < MAIN_ITEM_KIND; i++) { DrawHitBox(&GetMainItem[i]); }
 
-
-
 	//数値を出したいとき
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
 	DrawBox(930, GAME_HEIGHT - 90, GAME_WIDTH, GAME_HEIGHT, GetColor(50, 50, 50), TRUE);
@@ -1422,7 +1428,7 @@ VOID PlayDraw(VOID)
 
 			if (MenuStringLeft == GAME_MENU_CONFIG)
 			{
-				if (MenuStringRight == 2 && MenuRight == TRUE)
+				if (MenuStringRight == 0 && MenuRight == TRUE)
 					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "音量", GetColor(200, 200, 200), FALSE);
 				else
 					DrawString(GAME_WIDTH / 3 + 20, GAME_HEIGHT / 6 + 20, "音量", GetColor(100, 100, 100), FALSE);
