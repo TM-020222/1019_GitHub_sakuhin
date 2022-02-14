@@ -566,7 +566,7 @@ VOID TutorialInit(VOID)
 	strcpyDx(TutorialString[0], "チュートリアルをスキップしますか？");
 	strcpyDx(TutorialString[1], "");
 	strcpyDx(TutorialString[2], "[Z]:決定、[X]:キャンセル,メニュー、[SHIFT]:ダッシュ");
-	strcpyDx(TutorialString[3], "[W,A,S,D]:上下左右移動、[矢印キー]:選択肢の移動");
+	strcpyDx(TutorialString[3], "[矢印キー]:上下左右移動、選択肢の移動");
 	strcpyDx(TutorialString[4], "マップ右上側で素材の採取");
 	strcpyDx(TutorialString[5], "マップ中央付近で素材を消費してのクラフトができます");
 	strcpyDx(TutorialString[6], "クラフトすることでステータスが上昇します");
@@ -646,70 +646,7 @@ VOID PlayInit(VOID)
 	SetWeaponStatus(&CraftingItemMenu[3], "魔術本", 5, 0, 1, 0, 5, 1, 0);
 	SetWeaponStatus(&CraftingItemMenu[4], "バトルアックス", 5, 2, 5, 3, 0, 5, 0);
 	SetWeaponStatus(&CraftingItemMenu[5], "グレートソード", 2, 5, 8, 2, 0, 7, 2);
-	/*
-	strcpyDx(CraftingItemMenu[0].string, "ピッケル");
-	strcpyDx(CraftingItemMenu[1].string, "アックス");
-	strcpyDx(CraftingItemMenu[2].string, "ソード");
-	strcpyDx(CraftingItemMenu[3].string, "魔術本");
-	strcpyDx(CraftingItemMenu[4].string, "バトルアックス");
-	strcpyDx(CraftingItemMenu[5].string, "グレートソード");
 
-	//クラフト必要素材(のちに関数化)
-	CraftingItemMenu[0].Wood = 1;
-	CraftingItemMenu[0].Stone = 3;
-	CraftingItemMenu[0].Metal = 0;
-
-	CraftingItemMenu[1].Wood = 3;
-	CraftingItemMenu[1].Stone = 2;
-	CraftingItemMenu[1].Metal = 1;
-
-	CraftingItemMenu[2].Wood = 1;
-	CraftingItemMenu[2].Stone = 1;
-	CraftingItemMenu[2].Metal = 5;
-	
-	CraftingItemMenu[3].Wood = 5;
-	CraftingItemMenu[3].Stone = 0;
-	CraftingItemMenu[3].Metal = 1;
-	
-	CraftingItemMenu[4].Wood = 5;
-	CraftingItemMenu[4].Stone = 2;
-	CraftingItemMenu[4].Metal = 5;
-	
-	CraftingItemMenu[5].Wood = 2;
-	CraftingItemMenu[5].Stone = 5;
-	CraftingItemMenu[5].Metal = 8;
-
-	//武器のステータス
-	CraftingItemMenu[0].HP = 3;
-	CraftingItemMenu[0].MP = 1;
-	CraftingItemMenu[0].ATK = 0;
-	CraftingItemMenu[0].DEF = 0;
-
-	CraftingItemMenu[1].HP = 0;
-	CraftingItemMenu[1].MP = 1;
-	CraftingItemMenu[1].ATK = 0;
-	CraftingItemMenu[1].DEF = 3;
-
-	CraftingItemMenu[2].HP = 0;
-	CraftingItemMenu[2].MP = 1;
-	CraftingItemMenu[2].ATK = 3;
-	CraftingItemMenu[2].DEF = 0;
-	
-	CraftingItemMenu[3].HP = 0;
-	CraftingItemMenu[3].MP = 5;
-	CraftingItemMenu[3].ATK = 1;
-	CraftingItemMenu[3].DEF = 0;
-	
-	CraftingItemMenu[4].HP = 3;
-	CraftingItemMenu[4].MP = 0;
-	CraftingItemMenu[4].ATK = 5;
-	CraftingItemMenu[4].DEF = 0;
-	
-	CraftingItemMenu[5].HP = 2;
-	CraftingItemMenu[5].MP = 0;
-	CraftingItemMenu[5].ATK = 7;
-	CraftingItemMenu[5].DEF = 2;
-	*/
 	//インベントリ
 	for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
 	{
@@ -919,22 +856,25 @@ VOID Tutorial(VOID)
 /// </summary>
 VOID TutorialProc(VOID)
 {
-	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	if (GAME_DEBUG)
 	{
-		//シーン切り替え
-		//次のシーンの初期化をここで行うと楽
+		if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+		{
+			//シーン切り替え
+			//次のシーンの初期化をここで行うと楽
 
-		//SEを流す
-		PlayAudio(sceneEnterSE);
+			//SEを流す
+			PlayAudio(sceneEnterSE);
 
-		//ゲームの初期化
-		GameInit();
-		PlayInit();
+			//ゲームの初期化
+			GameInit();
+			PlayInit();
 
-		//プレイ画面に切り替え
-		ChangeScene(GAME_SCENE_PLAY);
+			//プレイ画面に切り替え
+			ChangeScene(GAME_SCENE_PLAY);
 
-		return;
+			return;
+		}
 	}
 
 	if (TutorialCnt == 0)
@@ -1036,22 +976,24 @@ VOID PlayProc(VOID)
 		Volumecfg = GetVolumeAudio(playBGM);
 	}
 	SetVolumeAudio(&playBGM, Volumecfg);
-
-	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	if (GAME_DEBUG)
 	{
-		//ゲームデータの初期化
-		GameInit();
-		BattleInit();
+		if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			BattleInit();
 
-		//SEを流す
-		PlayAudio(sceneEnterSE);
-		//音楽を止める
-		StopAudio(&playBGM);
+			//SEを流す
+			PlayAudio(sceneEnterSE);
+			//音楽を止める
+			StopAudio(&playBGM);
 
-		//戦闘画面に切り替え
-		ChangeScene(GAME_SCENE_BATTLE);
+			//戦闘画面に切り替え
+			ChangeScene(GAME_SCENE_BATTLE);
 
-		return;
+			return;
+		}
 	}
 	
 	//Xを押したときの関数反転 + a
@@ -1724,21 +1666,24 @@ VOID BattleProc()
 	PlayAudio(battleBGM);
 	SetVolumeAudio(&battleBGM, Volumecfg);
 
-	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+	if (GAME_DEBUG)
 	{
-		//ゲームデータの初期化
-		GameInit();
-		EndInit();
+		if (KeyClick(KEY_INPUT_RETURN) == TRUE)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			EndInit();
 
-		//SEを流す
-		PlayAudio(sceneEnterSE);
-		//音楽を止める
-		StopAudio(&battleBGM);
+			//SEを流す
+			PlayAudio(sceneEnterSE);
+			//音楽を止める
+			StopAudio(&battleBGM);
 
-		//エンド画面に切り替え
-		ChangeScene(GAME_SCENE_END);
+			//エンド画面に切り替え
+			ChangeScene(GAME_SCENE_END);
 
-		return;
+			return;
+		}
 	}
 
 	if (KeyClick(KEY_INPUT_SPACE) == TRUE)
@@ -2104,9 +2049,6 @@ VOID EndDraw(VOID)
 {
 	DrawImage(EndImg);
 	DrawImage(EndLogo);
-
-	//数値を出したいとき
-	DrawFormatStringToHandle(900, 620, GetColor(0, 0, 0), sampleFont2.handle, "時間:%3.2f", GameTimeLimitMax - GameTimeLimit);
 
 	if (GAME_DEBUG)DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
 	return;
