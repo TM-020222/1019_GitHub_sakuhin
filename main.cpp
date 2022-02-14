@@ -9,7 +9,7 @@
 
 //独自のマクロ定義
 #define MAIN_ITEM_KIND	3
-#define CRAFTING_ITEM_KIND 3
+#define CRAFTING_ITEM_KIND 6
 
 //独自の列挙型の定義
 enum MUKI
@@ -642,6 +642,9 @@ VOID PlayInit(VOID)
 	strcpyDx(CraftingItemMenu[0].string, "ピッケル");
 	strcpyDx(CraftingItemMenu[1].string, "アックス");
 	strcpyDx(CraftingItemMenu[2].string, "ソード");
+	strcpyDx(CraftingItemMenu[3].string, "魔術本");
+	strcpyDx(CraftingItemMenu[4].string, "バトルアックス");
+	strcpyDx(CraftingItemMenu[5].string, "グレートソード");
 
 	//クラフト必要素材(のちに関数化)
 	CraftingItemMenu[0].Wood = 1;
@@ -655,6 +658,18 @@ VOID PlayInit(VOID)
 	CraftingItemMenu[2].Wood = 1;
 	CraftingItemMenu[2].Stone = 1;
 	CraftingItemMenu[2].Metal = 5;
+	
+	CraftingItemMenu[3].Wood = 5;
+	CraftingItemMenu[3].Stone = 0;
+	CraftingItemMenu[3].Metal = 1;
+	
+	CraftingItemMenu[4].Wood = 5;
+	CraftingItemMenu[4].Stone = 2;
+	CraftingItemMenu[4].Metal = 5;
+	
+	CraftingItemMenu[5].Wood = 2;
+	CraftingItemMenu[5].Stone = 5;
+	CraftingItemMenu[5].Metal = 8;
 
 	//武器のステータス
 	CraftingItemMenu[0].HP = 3;
@@ -671,6 +686,21 @@ VOID PlayInit(VOID)
 	CraftingItemMenu[2].MP = 1;
 	CraftingItemMenu[2].ATK = 3;
 	CraftingItemMenu[2].DEF = 0;
+	
+	CraftingItemMenu[3].HP = 0;
+	CraftingItemMenu[3].MP = 5;
+	CraftingItemMenu[3].ATK = 1;
+	CraftingItemMenu[3].DEF = 0;
+	
+	CraftingItemMenu[4].HP = 3;
+	CraftingItemMenu[4].MP = 0;
+	CraftingItemMenu[4].ATK = 5;
+	CraftingItemMenu[4].DEF = 0;
+	
+	CraftingItemMenu[5].HP = 2;
+	CraftingItemMenu[5].MP = 0;
+	CraftingItemMenu[5].ATK = 7;
+	CraftingItemMenu[5].DEF = 2;
 
 	//インベントリ
 	for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
