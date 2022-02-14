@@ -154,6 +154,7 @@ VOID ItemEventInit(EVENT* events, int Wood, int Stone, int CntMax);	//アイテム初
 VOID SetEventUpdate();							//イベントの場所更新
 VOID StatusUpdate(MENU tool);					//ステータスの変動用
 VOID SetCharaCmd(CHARA_CMD* cmd,const char name[255],int cost,float multi,BOOL myself);		//技の設定
+VOID SetWeaponStatus(MENU* tool, const char name[255], int wood, int stone, int metal, int HP, int MP, int ATK, int DEF);
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
 
@@ -639,6 +640,13 @@ VOID PlayInit(VOID)
 		CraftingItemMenu[i].can = FALSE;
 	}
 
+	SetWeaponStatus(&CraftingItemMenu[0], "ピッケル", 1, 3, 0, 3, 1, 0, 0);
+	SetWeaponStatus(&CraftingItemMenu[1], "アックス", 3, 2, 1, 0, 1, 0, 3);
+	SetWeaponStatus(&CraftingItemMenu[2], "ソード", 1, 1, 5, 0, 1, 3, 0);
+	SetWeaponStatus(&CraftingItemMenu[3], "魔術本", 5, 0, 1, 0, 5, 1, 0);
+	SetWeaponStatus(&CraftingItemMenu[4], "バトルアックス", 5, 2, 5, 3, 0, 5, 0);
+	SetWeaponStatus(&CraftingItemMenu[5], "グレートソード", 2, 5, 8, 2, 0, 7, 2);
+	/*
 	strcpyDx(CraftingItemMenu[0].string, "ピッケル");
 	strcpyDx(CraftingItemMenu[1].string, "アックス");
 	strcpyDx(CraftingItemMenu[2].string, "ソード");
@@ -701,7 +709,7 @@ VOID PlayInit(VOID)
 	CraftingItemMenu[5].MP = 0;
 	CraftingItemMenu[5].ATK = 7;
 	CraftingItemMenu[5].DEF = 2;
-
+	*/
 	//インベントリ
 	for (int i = 0; i < CRAFTING_ITEM_KIND; i++)
 	{
@@ -2771,6 +2779,22 @@ VOID SetCharaCmd(CHARA_CMD* cmd, const char name[255], int cost, float multi, BO
 	cmd->cost = cost;
 	cmd->DamageMultiplier = multi;
 	cmd->Myself = myself;
+
+	return;
+}
+
+VOID SetWeaponStatus(MENU* tool, const char name[255], int wood, int stone, int metal, int HP, int MP, int ATK, int DEF)
+{
+	strcpyDx(tool->string, name);
+
+	tool->Wood = wood;
+	tool->Stone = stone;
+	tool->Metal = metal;
+
+	tool->HP = HP;
+	tool->MP = MP;
+	tool->ATK = ATK;
+	tool->DEF = DEF;
 
 	return;
 }
