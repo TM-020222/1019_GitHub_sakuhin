@@ -1961,17 +1961,6 @@ VOID BattleDraw()
 	}
 
 
-	//ÉçÉOï\é¶
-	/*
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
-	DrawBox(GAME_WIDTH - 350, 10, GAME_WIDTH - 50, 110, GetColor(200, 200, 200), TRUE);
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-
-	for (int i = 0; i < 4; i++)
-	{
-		DrawString(GAME_WIDTH - 340, 80 - (i * 20), BattleLog[i], GetColor(150, 150, 150));
-	}
-	*/
 	if (PlayerTurn)
 		DrawFormatString(520, GAME_HEIGHT - 130, GetColor(0, 0, 0), "%s ÇÃ %sÅI",PlayChara.Name,PlayChara.cmd[BattlePlayCmd].Name);
 	if (PlayerResult)
